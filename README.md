@@ -1,6 +1,8 @@
 sodiumpp
 ========
 
+*This is a very preliminary version, do NOT expect it to be secure or use it for anything important.*
+
 This library implements the C++ API of NaCl on top of libsodium, as well as a high level API that takes care of nonce generation for you:
 
 ```c++
