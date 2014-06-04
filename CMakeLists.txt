@@ -1,8 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 project (sodiumpp)
 
-INCLUDE_DIRECTORIES(/opt/local/include)
-LINK_DIRECTORIES(/opt/local/lib)
+add_definitions(
+    -std=c++11 # Or -std=c++0x
+)
 
 add_library(sodiumpp SHARED sodiumpp.cpp)
 target_link_libraries(sodiumpp sodium)
