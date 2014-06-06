@@ -72,9 +72,7 @@ namespace sodiumpp {
         std::string secret_bytes;
     public:
         public_key pk;
-        secret_key(const public_key& pk, const std::string& secret_bytes) {
-            
-        }
+        secret_key(const public_key& pk, const std::string& secret_bytes) : pk(pk), secret_bytes(secret_bytes) {}
         secret_key() {
             pk.bytes = crypto_box_keypair(&secret_bytes);
         }
@@ -89,10 +87,11 @@ namespace sodiumpp {
     class nonce {
     private:
         std::string bytes;
+        bool overflow;
     public:
-        static_assert(constantbytes <= crypto_box_NONCEBYTES and sequentialbytes <= crypto_box_NONCEBYTES and constantbytes + sequentialbytes == crypto_box_NONCEBYTES, "constantbytes + sequentialbytes needs to be equal to crypto_box_NONCEBYTES");
-        nonce() : nonce("") {}
-        nonce(const std::string& constant) : bytes(constant) {
+        static_assert(constantbytes < crypto_box_NONCEBYTES and sequentialbytes <= crypto_box_NONCEBYTES and constantbytes + sequentialbytes == crypto_box_NONCEBYTES, "constantbytes + sequentialbytes needs to be equal to crypto_box_NONCEBYTES and sequentialbytes needs to be greater than 0");
+        nonce() : nonce(""), overflow(false) {}
+        nonce(const std::string& constant, bool uneven) : bytes(constant), overflow(false) {
             if(constant.size() > 0 and constant.size() != constantbytes) {
                 throw "constant bytes does not have correct length";
             }
@@ -100,25 +99,30 @@ namespace sodiumpp {
             if(constant.size() == 0) {
                 randombytes_buf(&bytes[0], constantbytes);
             }
+            if(uneven) {
+                bytes[bytes.size()-1] = 1;
+            }
         }
-        nonce& operator++() {
-            int i;
-            for(i = bytes.size()-1; i >= constantbytes; --i) {
+        std::string next() {
+            unsigned int carry = 2;
+            for(int i = bytes.size()-1; i >= constantbytes && carry > 0; --i) {
                 unsigned int current = *reinterpret_cast<unsigned char *>(&bytes[i]);
-                current += 1;
-                if(current <= 0xff) {
-                    *reinterpret_cast<unsigned char *>(&bytes[i]) = current & 0xff;
-                    break;
-                } else {
-                    bytes[i] = 0;
-                }
+                current += carry;
+                *reinterpret_cast<unsigned char *>(&bytes[i]) = current & 0xff;
+                carry = current >> 8;
             }
-            if(i == constantbytes-1) {
-                throw "repeated nonce";
+            if(carry > 0) {
+                overflow = true;
             }
-            return *this;
+            return get();
         }
-        std::string operator*() const { return bytes; }
+        std::string get() const { 
+            if(overflow) {
+                throw "overflow in sequential part of nonce";
+            } else {
+                return bytes;
+            }
+        }
         std::string constant() const { return bytes.substr(0, constantbytes); }
         std::string sequential() const { return bytes.substr(constantbytes, sequentialbytes); }
     };
@@ -132,16 +136,10 @@ namespace sodiumpp {
         secret_key sk;
     public:
         boxer(const public_key& pk, const secret_key& sk) : boxer(pk, sk, "") {}
-        boxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant) {
-            if(sk.pk.bytes > pk.bytes) {
-                ++n;
-            }
-        }
+        boxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant, sk.pk.bytes > pk.bytes) {}
         std::string nonce_constant() const { return n.constant(); }
         std::string box(std::string message) {
-
-            std::string c = crypto_box_afternm(message, *n, k);
-            ++n; ++n;
+            std::string c = crypto_box_afternm(message, n.next(), k);
             return c;
         }
         ~boxer() {
@@ -157,15 +155,10 @@ namespace sodiumpp {
         public_key pk;
         secret_key sk;
     public:
-        unboxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant) {
-            if(pk.bytes > sk.pk.bytes) {
-                ++n;
-            }
-        }
+        unboxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant, sk.pk.bytes > pk.bytes) {}
         std::string nonce_constant() const { return n.constant(); }
         std::string unbox(std::string ciphertext) {
-            std::string m = crypto_box_open_afternm(ciphertext, *n, k);
-            ++n; ++n;
+            std::string m = crypto_box_open_afternm(ciphertext, n.next(), k);
             return m;
         }
         ~unboxer() {
