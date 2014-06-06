@@ -59,7 +59,7 @@ namespace sodiumpp {
     class public_key {
     private:
         std::string bytes;
-        public_key() { }
+        public_key() {}
     public:
         public_key(const std::string& bytes) : bytes(bytes) {}
         std::string get() const { return bytes; }
@@ -126,6 +126,12 @@ namespace sodiumpp {
         std::string constant() const { return bytes.substr(0, constantbytes); }
         std::string sequential() const { return bytes.substr(constantbytes, sequentialbytes); }
     };
+
+    template <unsigned int constantbytes, unsigned int sequentialbytes>
+    std::ostream& operator<<(std::ostream& s, nonce<constantbytes, sequentialbytes> n) {
+        s << bin2hex(n.constant()) << " - " << bin2hex(n.sequential());
+        return s;
+    }
     
     template <typename noncetype>
     class boxer {
@@ -136,10 +142,11 @@ namespace sodiumpp {
         secret_key sk;
     public:
         boxer(const public_key& pk, const secret_key& sk) : boxer(pk, sk, "") {}
-        boxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant, sk.pk.bytes > pk.bytes) {}
+        boxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant, sk.pk.get() > pk.get()) {}
         std::string nonce_constant() const { return n.constant(); }
         std::string box(std::string message) {
             std::string c = crypto_box_afternm(message, n.next(), k);
+            //std::cout << "box(" << n << ", " << bin2hex(message) << ") = " << bin2hex(c) << std::endl;
             return c;
         }
         ~boxer() {
@@ -155,10 +162,11 @@ namespace sodiumpp {
         public_key pk;
         secret_key sk;
     public:
-        unboxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant, sk.pk.bytes > pk.bytes) {}
+        unboxer(const public_key& pk, const secret_key& sk, const std::string& nonce_constant) : pk(pk), sk(sk), k(crypto_box_beforenm(pk.get(), sk.get())), n(nonce_constant, pk.get() > sk.pk.get()) {}
         std::string nonce_constant() const { return n.constant(); }
         std::string unbox(std::string ciphertext) {
             std::string m = crypto_box_open_afternm(ciphertext, n.next(), k);
+            //std::cout << "unbox(" << n << ", " << bin2hex(ciphertext) << ") = " << bin2hex(m) << std::endl;
             return m;
         }
         ~unboxer() {
