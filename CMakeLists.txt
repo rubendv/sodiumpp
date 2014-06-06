@@ -8,5 +8,8 @@ add_definitions(
 add_library(sodiumpp SHARED sodiumpp.cpp)
 target_link_libraries(sodiumpp sodium)
 
+add_executable(example example.cpp)
+target_link_libraries(sodiumpp)
+
 install_files(/include .h)
 install_targets(/lib sodiumpp)
