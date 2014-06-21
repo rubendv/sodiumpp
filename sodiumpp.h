@@ -72,7 +72,7 @@ namespace sodiumpp {
         std::string secret_bytes;
     public:
         public_key pk;
-        secret_key(const public_key& pk, const std::string& secret_bytes) : pk(pk), secret_bytes(secret_bytes) {}
+        secret_key(const public_key& pk, const std::string& secret_bytes) : secret_bytes(secret_bytes), pk(pk) {}
         secret_key() {
             pk.bytes = crypto_box_keypair(&secret_bytes);
         }
@@ -90,7 +90,7 @@ namespace sodiumpp {
         bool overflow;
     public:
         static_assert(constantbytes < crypto_box_NONCEBYTES and sequentialbytes <= crypto_box_NONCEBYTES and constantbytes + sequentialbytes == crypto_box_NONCEBYTES, "constantbytes + sequentialbytes needs to be equal to crypto_box_NONCEBYTES and sequentialbytes needs to be greater than 0");
-        nonce() : nonce(""), overflow(false) {}
+        nonce() : nonce("") {}
         nonce(const std::string& constant, bool uneven) : bytes(constant), overflow(false) {
             if(constant.size() > 0 and constant.size() != constantbytes) {
                 throw "constant bytes does not have correct length";
