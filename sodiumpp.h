@@ -159,7 +159,7 @@ namespace sodiumpp {
         }
         void increase() {
             unsigned int carry = 2;
-            for(size_t i = bytes.size()-1; i >= constantbytes && carry > 0; --i) {
+            for(int64_t i = bytes.size()-1; i >= constantbytes && carry > 0; --i) {
                 unsigned int current = *reinterpret_cast<unsigned char *>(&bytes[i]);
                 current += carry;
                 *reinterpret_cast<unsigned char *>(&bytes[i]) = current & 0xff;
