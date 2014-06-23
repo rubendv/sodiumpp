@@ -55,8 +55,8 @@ string sodiumpp::crypto_box(const string &m,const string &n,const string &pk,con
     if (n.size() != crypto_box_NONCEBYTES) throw "incorrect nonce length";
     size_t mlen = m.size() + crypto_box_ZEROBYTES;
     unsigned char mpad[mlen];
-    for (int i = 0;i < crypto_box_ZEROBYTES;++i) mpad[i] = 0;
-    for (int i = crypto_box_ZEROBYTES;i < mlen;++i) mpad[i] = m[i - crypto_box_ZEROBYTES];
+    for (size_t i = 0;i < crypto_box_ZEROBYTES;++i) mpad[i] = 0;
+    for (size_t i = crypto_box_ZEROBYTES;i < mlen;++i) mpad[i] = m[i - crypto_box_ZEROBYTES];
     unsigned char cpad[mlen];
     ::crypto_box(cpad,mpad,mlen,
                (const unsigned char *) n.c_str(),
@@ -91,8 +91,8 @@ string sodiumpp::crypto_box_afternm(const string &m,const string &n,const string
     if (n.size() != crypto_box_NONCEBYTES) throw "incorrect nonce length";
     size_t mlen = m.size() + crypto_box_ZEROBYTES;
     unsigned char mpad[mlen];
-    for (int i = 0;i < crypto_box_ZEROBYTES;++i) mpad[i] = 0;
-    for (int i = crypto_box_ZEROBYTES;i < mlen;++i) mpad[i] = m[i - crypto_box_ZEROBYTES];
+    for (size_t i = 0;i < crypto_box_ZEROBYTES;++i) mpad[i] = 0;
+    for (size_t i = crypto_box_ZEROBYTES;i < mlen;++i) mpad[i] = m[i - crypto_box_ZEROBYTES];
     unsigned char cpad[mlen];
     ::crypto_box_afternm(cpad,mpad,mlen,
                  (const unsigned char *) n.c_str(),
@@ -110,8 +110,8 @@ string sodiumpp::crypto_box_open_afternm(const string &c,const string &n,const s
     if (n.size() != crypto_box_NONCEBYTES) throw "incorrect nonce length";
     size_t clen = c.size() + crypto_box_BOXZEROBYTES;
     unsigned char cpad[clen];
-    for (int i = 0;i < crypto_box_BOXZEROBYTES;++i) cpad[i] = 0;
-    for (int i = crypto_box_BOXZEROBYTES;i < clen;++i) cpad[i] = c[i - crypto_box_BOXZEROBYTES];
+    for (size_t i = 0;i < crypto_box_BOXZEROBYTES;++i) cpad[i] = 0;
+    for (size_t i = crypto_box_BOXZEROBYTES;i < clen;++i) cpad[i] = c[i - crypto_box_BOXZEROBYTES];
     unsigned char mpad[clen];
     if (::crypto_box_open_afternm(mpad,cpad,clen,
                                   (const unsigned char *) n.c_str(),
@@ -133,8 +133,8 @@ string sodiumpp::crypto_box_open(const string &c,const string &n,const string &p
     if (n.size() != crypto_box_NONCEBYTES) throw "incorrect nonce length";
     size_t clen = c.size() + crypto_box_BOXZEROBYTES;
     unsigned char cpad[clen];
-    for (int i = 0;i < crypto_box_BOXZEROBYTES;++i) cpad[i] = 0;
-    for (int i = crypto_box_BOXZEROBYTES;i < clen;++i) cpad[i] = c[i - crypto_box_BOXZEROBYTES];
+    for (size_t i = 0;i < crypto_box_BOXZEROBYTES;++i) cpad[i] = 0;
+    for (size_t i = crypto_box_BOXZEROBYTES;i < clen;++i) cpad[i] = c[i - crypto_box_BOXZEROBYTES];
     unsigned char mpad[clen];
     if (::crypto_box_open(mpad,cpad,clen,
                         (const unsigned char *) n.c_str(),
@@ -199,8 +199,8 @@ string sodiumpp::crypto_secretbox(const string &m,const string &n,const string &
     if (n.size() != crypto_secretbox_NONCEBYTES) throw "incorrect nonce length";
     size_t mlen = m.size() + crypto_secretbox_ZEROBYTES;
     unsigned char mpad[mlen];
-    for (int i = 0;i < crypto_secretbox_ZEROBYTES;++i) mpad[i] = 0;
-    for (int i = crypto_secretbox_ZEROBYTES;i < mlen;++i) mpad[i] = m[i - crypto_secretbox_ZEROBYTES];
+    for (size_t i = 0;i < crypto_secretbox_ZEROBYTES;++i) mpad[i] = 0;
+    for (size_t i = crypto_secretbox_ZEROBYTES;i < mlen;++i) mpad[i] = m[i - crypto_secretbox_ZEROBYTES];
     unsigned char cpad[mlen];
     ::crypto_secretbox(cpad,mpad,mlen,(const unsigned char *) n.c_str(),(const unsigned char *) k.c_str());
     return string(
@@ -215,8 +215,8 @@ string sodiumpp::crypto_secretbox_open(const string &c,const string &n,const str
     if (n.size() != crypto_secretbox_NONCEBYTES) throw "incorrect nonce length";
     size_t clen = c.size() + crypto_secretbox_BOXZEROBYTES;
     unsigned char cpad[clen];
-    for (int i = 0;i < crypto_secretbox_BOXZEROBYTES;++i) cpad[i] = 0;
-    for (int i = crypto_secretbox_BOXZEROBYTES;i < clen;++i) cpad[i] = c[i - crypto_secretbox_BOXZEROBYTES];
+    for (size_t i = 0;i < crypto_secretbox_BOXZEROBYTES;++i) cpad[i] = 0;
+    for (size_t i = crypto_secretbox_BOXZEROBYTES;i < clen;++i) cpad[i] = c[i - crypto_secretbox_BOXZEROBYTES];
     unsigned char mpad[clen];
     if (::crypto_secretbox_open(mpad,cpad,clen,(const unsigned char *) n.c_str(),(const unsigned char *) k.c_str()) != 0)
         throw "ciphertext fails verification";
@@ -243,7 +243,7 @@ string sodiumpp::crypto_sign_open(const string &sm_string, const string &pk_stri
     size_t smlen = sm_string.size();
     unsigned char m[smlen];
     unsigned long long mlen;
-    for (int i = 0;i < smlen;++i) m[i] = sm_string[i];
+    for (size_t i = 0;i < smlen;++i) m[i] = sm_string[i];
     if (::crypto_sign_open(
                          m,
                          &mlen,
@@ -264,7 +264,7 @@ string sodiumpp::crypto_sign(const string &m_string, const string &sk_string)
     size_t mlen = m_string.size();
     unsigned char m[mlen+crypto_sign_BYTES];
     unsigned long long smlen;
-    for (int i = 0;i < mlen;++i) m[i] = m_string[i];
+    for (size_t i = 0;i < mlen;++i) m[i] = m_string[i];
     ::crypto_sign(
                 m,
                 &smlen,
