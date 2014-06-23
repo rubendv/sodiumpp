@@ -5,6 +5,11 @@ add_definitions(
     -std=c++11 # Or -std=c++0x
 )
 
+if(SODIUMPP_MACPORTS)
+    include_directories("/opt/local/include")
+    link_directories("/opt/local/lib")
+endif()
+
 if(SODIUMPP_STATIC)
 	add_library(sodiumpp STATIC sodiumpp.cpp)
 else()
