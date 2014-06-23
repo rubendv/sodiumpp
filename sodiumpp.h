@@ -1,5 +1,3 @@
-//  sodiumpp.h
-//
 // Copyright (c) 2014, Ruben De Visscher
 // All rights reserved.
 //
@@ -52,16 +50,37 @@ namespace sodiumpp {
     std::string crypto_sign(const std::string &m_string, const std::string &sk_string);
     std::string crypto_stream(size_t clen,const std::string &n,const std::string &k);
     std::string crypto_stream_xor(const std::string &m,const std::string &n,const std::string &k);
+    std::string crypto_shorthash(const std::string& m, const std::string& k);
+    std::string randombytes(size_t size);
     
     std::string bin2hex(const std::string& bytes);
+    std::string hex2bin(const std::string& bytes);
     void memzero(std::string& bytes);
+    
+    class crypto_error : public std::runtime_error {
+    public:
+        crypto_error(const std::string& what) : std::runtime_error(what) {}
+    };
+    
+    enum class encoding {
+        binary, hex
+    };
     
     class public_key {
     private:
         std::string bytes;
         public_key() {}
     public:
-        public_key(const std::string& bytes) : bytes(bytes) {}
+        public_key(const std::string& bytes, encoding encoding=encoding::binary) {
+            switch(encoding) {
+                case encoding::binary:
+                    this->bytes = bytes;
+                    break;
+                case encoding::hex:
+                    this->bytes = hex2bin(bytes);
+                    break;
+            }
+        }
         std::string get() const { return bytes; }
         friend class secret_key;
     };
@@ -72,7 +91,16 @@ namespace sodiumpp {
         std::string secret_bytes;
     public:
         public_key pk;
-        secret_key(const public_key& pk, const std::string& secret_bytes) : secret_bytes(secret_bytes), pk(pk) {}
+        secret_key(const public_key& pk, const std::string& secret_bytes, encoding encoding=encoding::binary) : pk(pk) {
+            switch(encoding) {
+                case encoding::binary:
+                    this->secret_bytes = secret_bytes;
+                    break;
+                case encoding::hex:
+                    this->secret_bytes = hex2bin(secret_bytes);
+                    break;
+            }
+        }
         secret_key() {
             pk.bytes = crypto_box_keypair(&secret_bytes);
         }
@@ -82,15 +110,41 @@ namespace sodiumpp {
         }
     };
     std::ostream& operator<<(std::ostream& stream, const secret_key& sk);
+
+    class sign_public_key {
+    private:
+        std::string bytes;
+    public:
+        sign_public_key() {}
+        sign_public_key(const std::string& bytes) : bytes(bytes) {}
+        std::string get() const { return bytes; }
+        friend class sign_secret_key;
+    };
+
+    class sign_secret_key {
+    private:
+        std::string secret_bytes;
+    public:
+        sign_public_key pk;
+        sign_secret_key(const sign_public_key& pk, const std::string& secret_bytes) : pk(pk), secret_bytes(secret_bytes) {}
+        sign_secret_key() {
+            pk.bytes = crypto_sign_keypair(&secret_bytes);
+        }
+        std::string get() const { return secret_bytes; }
+        ~sign_secret_key() {
+            memzero(secret_bytes);
+        }
+    };
     
-    template <unsigned int constantbytes, unsigned int sequentialbytes>
+    template <unsigned int sequentialbytes>
     class nonce {
     private:
+        static const unsigned int constantbytes = crypto_box_NONCEBYTES-sequentialbytes;
         std::string bytes;
         bool overflow;
     public:
-        static_assert(constantbytes < crypto_box_NONCEBYTES and sequentialbytes <= crypto_box_NONCEBYTES and constantbytes + sequentialbytes == crypto_box_NONCEBYTES, "constantbytes + sequentialbytes needs to be equal to crypto_box_NONCEBYTES and sequentialbytes needs to be greater than 0");
-        nonce() : nonce("") {}
+        static_assert(sequentialbytes <= crypto_box_NONCEBYTES and sequentialbytes > 0, "sequentialbytes needs to smaller than crypto_box_NONCEBYTES and greater than 0");
+        nonce() : nonce(""), overflow(false) {}
         nonce(const std::string& constant, bool uneven) : bytes(constant), overflow(false) {
             if(constant.size() > 0 and constant.size() != constantbytes) {
                 throw "constant bytes does not have correct length";
@@ -103,9 +157,9 @@ namespace sodiumpp {
                 bytes[bytes.size()-1] = 1;
             }
         }
-        std::string next() {
+        void increase() {
             unsigned int carry = 2;
-            for(int i = bytes.size()-1; i >= constantbytes && carry > 0; --i) {
+            for(size_t i = bytes.size()-1; i >= constantbytes && carry > 0; --i) {
                 unsigned int current = *reinterpret_cast<unsigned char *>(&bytes[i]);
                 current += carry;
                 *reinterpret_cast<unsigned char *>(&bytes[i]) = current & 0xff;
@@ -114,11 +168,14 @@ namespace sodiumpp {
             if(carry > 0) {
                 overflow = true;
             }
+        }
+        std::string next() {
+            increase();
             return get();
         }
-        std::string get() const { 
+        std::string get() const {
             if(overflow) {
-                throw "overflow in sequential part of nonce";
+                throw std::overflow_error("Sequential part of nonce has overflowed");
             } else {
                 return bytes;
             }
@@ -126,9 +183,13 @@ namespace sodiumpp {
         std::string constant() const { return bytes.substr(0, constantbytes); }
         std::string sequential() const { return bytes.substr(constantbytes, sequentialbytes); }
     };
+    
+    typedef nonce<8> nonce64;
+    typedef nonce<4> nonce32;
+    typedef nonce<2> nonce16;
 
-    template <unsigned int constantbytes, unsigned int sequentialbytes>
-    std::ostream& operator<<(std::ostream& s, nonce<constantbytes, sequentialbytes> n) {
+    template <unsigned int sequentialbytes>
+    std::ostream& operator<<(std::ostream& s, nonce<sequentialbytes> n) {
         s << bin2hex(n.constant()) << " - " << bin2hex(n.sequential());
         return s;
     }
@@ -166,6 +227,11 @@ namespace sodiumpp {
         std::string nonce_constant() const { return n.constant(); }
         std::string unbox(std::string ciphertext) {
             std::string m = crypto_box_open_afternm(ciphertext, n.next(), k);
+            //std::cout << "unbox(" << n << ", " << bin2hex(ciphertext) << ") = " << bin2hex(m) << std::endl;
+            return m;
+        }
+        std::string unbox(std::string ciphertext, std::string sequentialpart) const {
+            std::string m = crypto_box_open_afternm(ciphertext, n.constant() + sequentialpart, k);
             //std::cout << "unbox(" << n << ", " << bin2hex(ciphertext) << ") = " << bin2hex(m) << std::endl;
             return m;
         }

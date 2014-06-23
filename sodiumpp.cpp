@@ -1,5 +1,3 @@
-//  sodiumpp.cpp
-//
 // Copyright (c) 2014, Ruben De Visscher
 // All rights reserved.
 //
@@ -24,9 +22,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "sodiumpp.h"
-extern "C" {
-#include <sodium.h>
-}
 using std::string;
 
 string sodiumpp::crypto_auth(const string &m,const string &k)
@@ -45,7 +40,7 @@ void sodiumpp::crypto_auth_verify(const string &a,const string &m,const string &
                            (const unsigned char *) a.c_str(),
                            (const unsigned char *) m.c_str(),m.size(),
                            (const unsigned char *) k.c_str()) == 0) return;
-    throw "invalid authenticator";
+    throw sodiumpp::crypto_error("invalid authenticator");
 }
 
 string sodiumpp::crypto_box(const string &m,const string &n,const string &pk,const string &sk)
@@ -117,9 +112,9 @@ string sodiumpp::crypto_box_open_afternm(const string &c,const string &n,const s
                                   (const unsigned char *) n.c_str(),
                                   (const unsigned char *) k.c_str()
                                   ) != 0)
-        throw "ciphertext fails verification";
+        throw sodiumpp::crypto_error("ciphertext fails verification");
     if (clen < crypto_box_ZEROBYTES)
-        throw "ciphertext too short"; // should have been caught by _open
+        throw sodiumpp::crypto_error("ciphertext too short"); // should have been caught by _open
     return string(
                   (char *) mpad + crypto_box_ZEROBYTES,
                   clen - crypto_box_ZEROBYTES
@@ -141,9 +136,9 @@ string sodiumpp::crypto_box_open(const string &c,const string &n,const string &p
                         (const unsigned char *) pk.c_str(),
                         (const unsigned char *) sk.c_str()
                         ) != 0)
-        throw "ciphertext fails verification";
+        throw sodiumpp::crypto_error("ciphertext fails verification");
     if (clen < crypto_box_ZEROBYTES)
-        throw "ciphertext too short"; // should have been caught by _open
+        throw sodiumpp::crypto_error("ciphertext too short"); // should have been caught by _open
     return string(
                   (char *) mpad + crypto_box_ZEROBYTES,
                   clen - crypto_box_ZEROBYTES
@@ -173,7 +168,7 @@ void sodiumpp::crypto_onetimeauth_verify(const string &a,const string &m,const s
                                   (const unsigned char *) a.c_str(),
                                   (const unsigned char *) m.c_str(),m.size(),
                                   (const unsigned char *) k.c_str()) == 0) return;
-    throw "invalid authenticator";
+    throw sodiumpp::crypto_error("invalid authenticator");
 }
 
 string sodiumpp::crypto_scalarmult_base(const string &n)
@@ -219,9 +214,9 @@ string sodiumpp::crypto_secretbox_open(const string &c,const string &n,const str
     for (size_t i = crypto_secretbox_BOXZEROBYTES;i < clen;++i) cpad[i] = c[i - crypto_secretbox_BOXZEROBYTES];
     unsigned char mpad[clen];
     if (::crypto_secretbox_open(mpad,cpad,clen,(const unsigned char *) n.c_str(),(const unsigned char *) k.c_str()) != 0)
-        throw "ciphertext fails verification";
+        throw sodiumpp::crypto_error("ciphertext fails verification");
     if (clen < crypto_secretbox_ZEROBYTES)
-        throw "ciphertext too short"; // should have been caught by _open
+        throw sodiumpp::crypto_error("ciphertext too short"); // should have been caught by _open
     return string(
                   (char *) mpad + crypto_secretbox_ZEROBYTES,
                   clen - crypto_secretbox_ZEROBYTES
@@ -251,7 +246,7 @@ string sodiumpp::crypto_sign_open(const string &sm_string, const string &pk_stri
                          smlen,
                          (const unsigned char *) pk_string.c_str()
                          ) != 0)
-        throw "ciphertext fails verification";
+        throw sodiumpp::crypto_error("ciphertext fails verification");
     return string(
                   (char *) m,
                   mlen
@@ -307,8 +302,30 @@ string sodiumpp::bin2hex(const string& bytes) {
     return hex;
 }
 
+string sodiumpp::hex2bin(const string& bytes) {
+    if(bytes.size() % 2 != 0) throw std::invalid_argument("length must be even");
+    std::string bin(bytes.size()/2, 0);
+    size_t binlen;
+    sodium_hex2bin((unsigned char *)&bin[0], bin.size(), &bytes[0], bytes.size(), nullptr, &binlen, nullptr);
+    if(binlen != bin.size()) throw std::invalid_argument("string must be all hexadecimal digits");
+    return bin;
+}
+
 void sodiumpp::memzero(string& bytes) {
     sodium_memzero((unsigned char *)&bytes[0], bytes.size());
+}
+
+std::string sodiumpp::crypto_shorthash(const std::string& m, const std::string& k) {
+    if(k.size() != crypto_shorthash_KEYBYTES) throw "incorrect key length";
+    std::string out(crypto_shorthash_BYTES, 0);
+    ::crypto_shorthash((unsigned char *)&out[0], (const unsigned char *)&m[0], m.size(), (const unsigned char *)&k[0]);
+    return out;
+}
+
+std::string sodiumpp::randombytes(size_t size) {
+    std::string buf(size, 0);
+    randombytes_buf(&buf[0], size);
+    return buf;
 }
 
 std::ostream& sodiumpp::operator<<(std::ostream& stream, const sodiumpp::public_key& pk) {
