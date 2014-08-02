@@ -1,5 +1,3 @@
-//  example.cpp
-//
 // Copyright (c) 2014, Ruben De Visscher
 // All rights reserved.
 //
