@@ -10,6 +10,8 @@
 		06F4819F198CDA0000DFB1DA /* example.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F4819C198CDA0000DFB1DA /* example.cpp */; };
 		06F481A0198CDA0000DFB1DA /* sodiumpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F4819D198CDA0000DFB1DA /* sodiumpp.cpp */; };
 		06F481A2198CDA4300DFB1DA /* libsodium.10.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06F481A1198CDA4300DFB1DA /* libsodium.10.dylib */; };
+		06F481A7198CDD7000DFB1DA /* z85_impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F481A3198CDD7000DFB1DA /* z85_impl.cpp */; };
+		06F481A8198CDD7000DFB1DA /* z85.c in Sources */ = {isa = PBXBuildFile; fileRef = 06F481A4198CDD7000DFB1DA /* z85.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +32,10 @@
 		06F4819D198CDA0000DFB1DA /* sodiumpp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sodiumpp.cpp; sourceTree = "<group>"; };
 		06F4819E198CDA0000DFB1DA /* sodiumpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sodiumpp.h; sourceTree = "<group>"; };
 		06F481A1198CDA4300DFB1DA /* libsodium.10.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsodium.10.dylib; path = ../../../../opt/local/lib/libsodium.10.dylib; sourceTree = "<group>"; };
+		06F481A3198CDD7000DFB1DA /* z85_impl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = z85_impl.cpp; sourceTree = "<group>"; };
+		06F481A4198CDD7000DFB1DA /* z85.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = z85.c; sourceTree = "<group>"; };
+		06F481A5198CDD7000DFB1DA /* z85.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = z85.h; sourceTree = "<group>"; };
+		06F481A6198CDD7000DFB1DA /* z85.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = z85.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,11 +70,23 @@
 		06F48192198CD7C400DFB1DA /* sodiumpp */ = {
 			isa = PBXGroup;
 			children = (
+				06F481A9198CDD7700DFB1DA /* z85 */,
 				06F4819C198CDA0000DFB1DA /* example.cpp */,
 				06F4819D198CDA0000DFB1DA /* sodiumpp.cpp */,
 				06F4819E198CDA0000DFB1DA /* sodiumpp.h */,
 			);
 			path = sodiumpp;
+			sourceTree = "<group>";
+		};
+		06F481A9198CDD7700DFB1DA /* z85 */ = {
+			isa = PBXGroup;
+			children = (
+				06F481A3198CDD7000DFB1DA /* z85_impl.cpp */,
+				06F481A4198CDD7000DFB1DA /* z85.c */,
+				06F481A5198CDD7000DFB1DA /* z85.h */,
+				06F481A6198CDD7000DFB1DA /* z85.hpp */,
+			);
+			name = z85;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -122,6 +140,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				06F481A7198CDD7000DFB1DA /* z85_impl.cpp in Sources */,
+				06F481A8198CDD7000DFB1DA /* z85.c in Sources */,
 				06F4819F198CDA0000DFB1DA /* example.cpp in Sources */,
 				06F481A0198CDA0000DFB1DA /* sodiumpp.cpp in Sources */,
 			);

@@ -22,6 +22,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "sodiumpp.h"
+#include "z85.hpp"
 using std::string;
 
 string sodiumpp::crypto_auth(const string &m,const string &k)
@@ -329,10 +330,10 @@ std::string sodiumpp::randombytes(size_t size) {
 }
 
 std::ostream& sodiumpp::operator<<(std::ostream& stream, const sodiumpp::public_key& pk) {
-    return stream << "public_key(\"" << sodiumpp::bin2hex(pk.get()) << "\")";
+    return stream << "public_key(\"" << z85::encode(pk.get()) << "\")";
 }
 
 std::ostream& sodiumpp::operator<<(std::ostream& stream, const sodiumpp::secret_key& sk) {
-    return stream << sk.pk << ", secret_key(\"" << sodiumpp::bin2hex(sk.get()) << "\")";
+    return stream << sk.pk << ", secret_key(\"" << z85::encode(sk.get()) << "\")";
 }
 

@@ -28,6 +28,7 @@
 extern "C" {
 #include <sodium.h>
 }
+#include "z85.hpp"
 
 namespace sodiumpp {
     std::string crypto_auth(const std::string &m,const std::string &k);
@@ -63,7 +64,7 @@ namespace sodiumpp {
     };
     
     enum class encoding {
-        binary, hex
+        binary, hex, z85
     };
     
     class public_key {
@@ -79,6 +80,8 @@ namespace sodiumpp {
                 case encoding::hex:
                     this->bytes = hex2bin(bytes);
                     break;
+                case encoding::z85:
+                    this->bytes = z85::decode(bytes);
             }
         }
         std::string get() const { return bytes; }
@@ -99,6 +102,8 @@ namespace sodiumpp {
                 case encoding::hex:
                     this->secret_bytes = hex2bin(secret_bytes);
                     break;
+                case encoding::z85:
+                    this->secret_bytes = z85::decode(secret_bytes);
             }
         }
         secret_key() {
@@ -143,7 +148,7 @@ namespace sodiumpp {
         std::string bytes;
         bool overflow;
     public:
-        static_assert(sequentialbytes <= crypto_box_NONCEBYTES and sequentialbytes > 0, "sequentialbytes needs to smaller than crypto_box_NONCEBYTES and greater than 0");
+        static_assert(sequentialbytes <= crypto_box_NONCEBYTES and sequentialbytes > 0, "sequentialbytes can be at most crypto_box_NONCEBYTES and must be greater than 0");
         nonce() : nonce(""), overflow(false) {}
         nonce(const std::string& constant, bool uneven) : bytes(constant), overflow(false) {
             if(constant.size() > 0 and constant.size() != constantbytes) {
