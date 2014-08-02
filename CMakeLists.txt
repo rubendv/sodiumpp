@@ -11,14 +11,14 @@ if(SODIUMPP_MACPORTS)
 endif()
 
 if(SODIUMPP_STATIC)
-	add_library(sodiumpp STATIC sodiumpp.cpp)
+	add_library(sodiumpp STATIC sodiumpp/sodiumpp.cpp)
 else()
-	add_library(sodiumpp SHARED sodiumpp.cpp)
+	add_library(sodiumpp SHARED sodiumpp/sodiumpp.cpp)
 	target_link_libraries(sodiumpp sodium)
 endif()
 
 if(NOT SODIUMPP_STATIC)
-	add_executable(example example.cpp)
+	add_executable(example sodiumpp/example.cpp)
 	target_link_libraries(example sodiumpp)
 endif()
 
