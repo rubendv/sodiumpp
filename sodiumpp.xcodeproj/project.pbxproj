@@ -7,11 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		06F4819F198CDA0000DFB1DA /* example.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F4819C198CDA0000DFB1DA /* example.cpp */; };
 		06F481A0198CDA0000DFB1DA /* sodiumpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F4819D198CDA0000DFB1DA /* sodiumpp.cpp */; };
 		06F481A2198CDA4300DFB1DA /* libsodium.10.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06F481A1198CDA4300DFB1DA /* libsodium.10.dylib */; };
 		06F481A7198CDD7000DFB1DA /* z85_impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F481A3198CDD7000DFB1DA /* z85_impl.cpp */; };
 		06F481A8198CDD7000DFB1DA /* z85.c in Sources */ = {isa = PBXBuildFile; fileRef = 06F481A4198CDD7000DFB1DA /* z85.c */; };
+		06F481B7198D5F9200DFB1DA /* example.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F4819C198CDA0000DFB1DA /* example.cpp */; };
+		06F481B8198D5F9500DFB1DA /* sodiumpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F4819D198CDA0000DFB1DA /* sodiumpp.cpp */; };
+		06F481B9198D5F9900DFB1DA /* libsodium.10.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06F481A1198CDA4300DFB1DA /* libsodium.10.dylib */; };
+		06F481BA198D5FA000DFB1DA /* z85_impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F481A3198CDD7000DFB1DA /* z85_impl.cpp */; };
+		06F481BB198D5FA200DFB1DA /* z85.c in Sources */ = {isa = PBXBuildFile; fileRef = 06F481A4198CDD7000DFB1DA /* z85.c */; };
+		06F481BE198D5FC900DFB1DA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 06F481BC198D5FC900DFB1DA /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,10 +29,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		06F481AC198D5F8300DFB1DA /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		06F48190198CD7C400DFB1DA /* sodiumpp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sodiumpp; sourceTree = BUILT_PRODUCTS_DIR; };
+		06F48190198CD7C400DFB1DA /* sodiumpp-test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "sodiumpp-test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		06F4819C198CDA0000DFB1DA /* example.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = example.cpp; sourceTree = "<group>"; };
 		06F4819D198CDA0000DFB1DA /* sodiumpp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sodiumpp.cpp; sourceTree = "<group>"; };
 		06F4819E198CDA0000DFB1DA /* sodiumpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sodiumpp.h; sourceTree = "<group>"; };
@@ -36,6 +50,9 @@
 		06F481A4198CDD7000DFB1DA /* z85.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = z85.c; sourceTree = "<group>"; };
 		06F481A5198CDD7000DFB1DA /* z85.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = z85.h; sourceTree = "<group>"; };
 		06F481A6198CDD7000DFB1DA /* z85.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = z85.hpp; sourceTree = "<group>"; };
+		06F481AE198D5F8300DFB1DA /* sodiumpp-example */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "sodiumpp-example"; sourceTree = BUILT_PRODUCTS_DIR; };
+		06F481BC198D5FC900DFB1DA /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		06F481CD198D676000DFB1DA /* bandit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = bandit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +61,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				06F481A2198CDA4300DFB1DA /* libsodium.10.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06F481AB198D5F8300DFB1DA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06F481B9198D5F9900DFB1DA /* libsodium.10.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,7 +87,8 @@
 		06F48191198CD7C400DFB1DA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				06F48190198CD7C400DFB1DA /* sodiumpp */,
+				06F48190198CD7C400DFB1DA /* sodiumpp-test */,
+				06F481AE198D5F8300DFB1DA /* sodiumpp-example */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,10 +96,12 @@
 		06F48192198CD7C400DFB1DA /* sodiumpp */ = {
 			isa = PBXGroup;
 			children = (
+				06F481CD198D676000DFB1DA /* bandit */,
 				06F481A9198CDD7700DFB1DA /* z85 */,
 				06F4819C198CDA0000DFB1DA /* example.cpp */,
 				06F4819D198CDA0000DFB1DA /* sodiumpp.cpp */,
 				06F4819E198CDA0000DFB1DA /* sodiumpp.h */,
+				06F481BC198D5FC900DFB1DA /* main.cpp */,
 			);
 			path = sodiumpp;
 			sourceTree = "<group>";
@@ -92,9 +120,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		06F4818F198CD7C400DFB1DA /* sodiumpp */ = {
+		06F4818F198CD7C400DFB1DA /* sodiumpp-test */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 06F48199198CD7C400DFB1DA /* Build configuration list for PBXNativeTarget "sodiumpp" */;
+			buildConfigurationList = 06F48199198CD7C400DFB1DA /* Build configuration list for PBXNativeTarget "sodiumpp-test" */;
 			buildPhases = (
 				06F4818C198CD7C400DFB1DA /* Sources */,
 				06F4818D198CD7C400DFB1DA /* Frameworks */,
@@ -104,9 +132,26 @@
 			);
 			dependencies = (
 			);
-			name = sodiumpp;
+			name = "sodiumpp-test";
 			productName = sodiumpp;
-			productReference = 06F48190198CD7C400DFB1DA /* sodiumpp */;
+			productReference = 06F48190198CD7C400DFB1DA /* sodiumpp-test */;
+			productType = "com.apple.product-type.tool";
+		};
+		06F481AD198D5F8300DFB1DA /* sodiumpp-example */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06F481B4198D5F8300DFB1DA /* Build configuration list for PBXNativeTarget "sodiumpp-example" */;
+			buildPhases = (
+				06F481AA198D5F8300DFB1DA /* Sources */,
+				06F481AB198D5F8300DFB1DA /* Frameworks */,
+				06F481AC198D5F8300DFB1DA /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "sodiumpp-example";
+			productName = "sodiumpp-example";
+			productReference = 06F481AE198D5F8300DFB1DA /* sodiumpp-example */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -130,7 +175,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				06F4818F198CD7C400DFB1DA /* sodiumpp */,
+				06F4818F198CD7C400DFB1DA /* sodiumpp-test */,
+				06F481AD198D5F8300DFB1DA /* sodiumpp-example */,
 			);
 		};
 /* End PBXProject section */
@@ -142,8 +188,19 @@
 			files = (
 				06F481A7198CDD7000DFB1DA /* z85_impl.cpp in Sources */,
 				06F481A8198CDD7000DFB1DA /* z85.c in Sources */,
-				06F4819F198CDA0000DFB1DA /* example.cpp in Sources */,
+				06F481BE198D5FC900DFB1DA /* main.cpp in Sources */,
 				06F481A0198CDA0000DFB1DA /* sodiumpp.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06F481AA198D5F8300DFB1DA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06F481B7198D5F9200DFB1DA /* example.cpp in Sources */,
+				06F481B8198D5F9500DFB1DA /* sodiumpp.cpp in Sources */,
+				06F481BA198D5FA000DFB1DA /* z85_impl.cpp in Sources */,
+				06F481BB198D5FA200DFB1DA /* z85.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -227,6 +284,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/opt/local/include,
+					"$(SRCROOT)/sodiumpp",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -237,6 +295,43 @@
 			name = Debug;
 		};
 		06F4819B198CD7C400DFB1DA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/opt/local/include,
+					"$(SRCROOT)/sodiumpp",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		06F481B5198D5F8300DFB1DA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/opt/local/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		06F481B6198D5F8300DFB1DA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -264,11 +359,19 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		06F48199198CD7C400DFB1DA /* Build configuration list for PBXNativeTarget "sodiumpp" */ = {
+		06F48199198CD7C400DFB1DA /* Build configuration list for PBXNativeTarget "sodiumpp-test" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				06F4819A198CD7C400DFB1DA /* Debug */,
 				06F4819B198CD7C400DFB1DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		06F481B4198D5F8300DFB1DA /* Build configuration list for PBXNativeTarget "sodiumpp-example" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06F481B5198D5F8300DFB1DA /* Debug */,
+				06F481B6198D5F8300DFB1DA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};
