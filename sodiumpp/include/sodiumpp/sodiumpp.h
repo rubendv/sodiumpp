@@ -168,11 +168,13 @@ namespace sodiumpp {
     public:
         static const unsigned int constantbytes = crypto_box_NONCEBYTES-sequentialbytes;
         static_assert(sequentialbytes <= crypto_box_NONCEBYTES and sequentialbytes > 0, "sequentialbytes can be at most crypto_box_NONCEBYTES and must be greater than 0");
-        nonce() : nonce(""), overflow(false) {}
-        nonce(const encoded_bytes& constant, bool uneven) : bytes(crypto_box_NONCEBYTES, 0), overflow(false) {
+        nonce() : nonce(encoded_bytes("", encoding::binary), false, false) {}
+        nonce(const encoded_bytes& constant, bool uneven, bool generate_constant=true) : bytes(crypto_box_NONCEBYTES, 0), overflow(false) {
             std::string constant_decoded = constant.to_binary();
             if(constant_decoded.size() == 0) {
-                randombytes_buf(&bytes[0], constantbytes);
+                if(generate_constant) {
+                    randombytes_buf(&bytes[0], constantbytes);
+                }
             } else if(constant_decoded.size() != constantbytes) {
                 throw std::invalid_argument("constant bytes does not have correct length");
             }
@@ -183,6 +185,8 @@ namespace sodiumpp {
                 bytes[bytes.size()-1] = 1;
             }
         }
+        nonce(const encoded_bytes& constant, const encoded_bytes& sequentialpart) : bytes(constant.to_binary() + sequentialpart.to_binary()) {}
+        nonce(const encoded_bytes& encoded) : bytes(encoded.to_binary()) {}
         void increase() {
             unsigned int carry = 2;
             for(int64_t i = bytes.size()-1; i >= constantbytes && carry > 0; --i) {
@@ -232,9 +236,15 @@ namespace sodiumpp {
         }
         noncetype get_nonce() const { return n; }
         encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
-        encoded_bytes box(std::string message, encoding encoding=encoding::binary) {
-            std::string c = crypto_box_afternm(message, n.next().to_binary(), k);
+        encoded_bytes box(std::string message, noncetype& used_n, encoding encoding=encoding::binary) {
+            std::string c = crypto_box_afternm(message, n.get().to_binary(), k);
+            used_n = n;
+            n.increase();
             return encoded_bytes(encode_from_binary(c, encoding), encoding);
+        }
+        encoded_bytes box(std::string message, encoding encoding=encoding::binary) {
+            noncetype current_n;
+            return box(message, current_n, encoding);
         }
         ~boxer() {
             memzero(k);
@@ -254,11 +264,12 @@ namespace sodiumpp {
         noncetype get_nonce() const { return n; }
         encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
         std::string unbox(const encoded_bytes& ciphertext) {
-            std::string m = crypto_box_open_afternm(ciphertext.to_binary(), n.next().to_binary(), k);
+            std::string m = crypto_box_open_afternm(ciphertext.to_binary(), n.get().to_binary(), k);
+            n.increase();
             return m;
         }
-        std::string unbox(const encoded_bytes& ciphertext, const encoded_bytes& sequentialpart) const {
-            std::string m = crypto_box_open_afternm(ciphertext.to_binary(), n.get_constant().to_binary() + sequentialpart.to_binary(), k);
+        std::string unbox(const encoded_bytes& ciphertext, const noncetype& n_override) const {
+            std::string m = crypto_box_open_afternm(ciphertext.to_binary(), n_override.get().to_binary(), k);
             return m;
         }
         ~unboxer() {

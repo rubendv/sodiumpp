@@ -39,16 +39,20 @@ int main(int argc, const char ** argv) {
     boxer<nonce64> client_boxer(sk_server.pk, sk_client);
     unboxer<nonce64> server_unboxer(sk_client.pk, sk_server, client_boxer.get_nonce_constant());
 
-    encoded_bytes boxed = client_boxer.box("Hello, world!\n");
-    std::cout << "Nonce (hex): " << client_boxer.get_nonce().get(encoding::hex).bytes << std::endl;
+    nonce64 used_n;
+    encoded_bytes boxed = client_boxer.box("Hello, world!\n", used_n);
+    std::cout << "Nonce (hex): " << used_n.get(encoding::hex).bytes << std::endl;
     std::cout << "Boxed message (z85): " << boxed.to(encoding::z85).bytes << std::endl;
-    std::string unboxed = server_unboxer.unbox(boxed);
+    // Nonce is passed explicitly here, but will also be increased automatically
+    // if unboxing happens in the same order as boxing.
+    // In a real application this nonce would be passed along with the boxed message.
+    std::string unboxed = server_unboxer.unbox(boxed, used_n);
     std::cout << "Unboxed message: " << unboxed;
     std::cout << std::endl;
 
-    boxed = client_boxer.box("From sodiumpp!\n");
-    unboxed = server_unboxer.unbox(boxed);
-    std::cout << "Nonce (hex): " << client_boxer.get_nonce().get(encoding::hex).bytes << std::endl;
+    boxed = client_boxer.box("From sodiumpp!\n", used_n);
+    unboxed = server_unboxer.unbox(boxed, used_n);
+    std::cout << "Nonce (hex): " << used_n.get(encoding::hex).bytes << std::endl;
     std::cout << "Boxed message (z85): " << boxed.to(encoding::z85).bytes << std::endl;
     std::cout << "Unboxed message: " << unboxed;
     return 0;
