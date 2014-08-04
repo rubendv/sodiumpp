@@ -6,7 +6,7 @@ sodiumpp
 This library implements the C++ API of NaCl on top of libsodium, as well as a high level API that takes care of nonce generation for you:
 
 ```c++
-#include "sodiumpp.h"
+#include <sodiumpp/sodiumpp.h>
 #include <string>
 #include <iostream>
 using namespace sodiumpp;
