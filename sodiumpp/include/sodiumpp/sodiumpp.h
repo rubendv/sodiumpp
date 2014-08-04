@@ -28,7 +28,7 @@
 extern "C" {
 #include <sodium.h>
 }
-#include "z85.hpp"
+#include <sodiumpp/z85.hpp>
 
 namespace sodiumpp {
     std::string crypto_auth(const std::string &m,const std::string &k);

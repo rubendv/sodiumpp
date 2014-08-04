@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <limits.h>
 
-#include "z85.h"
+#include <sodiumpp/z85.h>
 
 typedef unsigned int  uint32_t;
 typedef unsigned char byte;

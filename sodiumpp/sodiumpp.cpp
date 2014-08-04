@@ -21,8 +21,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "sodiumpp.h"
-#include "z85.hpp"
+#include <sodiumpp/sodiumpp.h>
+#include <sodiumpp/z85.hpp>
 
 std::string sodiumpp::crypto_auth(const std::string &m,const std::string &k)
 {

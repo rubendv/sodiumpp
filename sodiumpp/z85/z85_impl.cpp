@@ -28,11 +28,11 @@
  * Source repository: http://github.com/artemkin/z85
  */
 
-#include "z85.hpp"
+#include <sodiumpp/z85.hpp>
 
 #include <cassert>
 
-#include "z85.h"
+#include <sodiumpp/z85.h>
 
 
 namespace z85

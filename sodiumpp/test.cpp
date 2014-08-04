@@ -7,8 +7,8 @@
 //
 
 #include <iostream>
-#include "sodiumpp.h"
-#include "bandit/bandit.h"
+#include <sodiumpp/sodiumpp.h>
+#include <bandit/bandit.h>
 
 using namespace sodiumpp;
 using namespace bandit;

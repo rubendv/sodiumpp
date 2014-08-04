@@ -21,7 +21,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "sodiumpp.h"
+#include <sodiumpp/sodiumpp.h>
 #include <string>
 #include <iostream>
 using namespace sodiumpp;
