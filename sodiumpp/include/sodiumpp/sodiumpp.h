@@ -230,14 +230,15 @@ namespace sodiumpp {
         boxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, sk.pk.get().to_binary() > pk.get().to_binary()) {
             sodium_mlock(&k[0], k.size());
         }
+        noncetype get_nonce() const { return n; }
         encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
         encoded_bytes box(std::string message, encoding encoding=encoding::binary) {
             std::string c = crypto_box_afternm(message, n.next().to_binary(), k);
             return encoded_bytes(encode_from_binary(c, encoding), encoding);
         }
         ~boxer() {
-            sodium_munlock(&k[0], k.size());
             memzero(k);
+            sodium_munlock(&k[0], k.size());
         }
     };
     
@@ -250,6 +251,7 @@ namespace sodiumpp {
         unboxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, pk.get().to_binary() > sk.pk.get().to_binary()) {
             sodium_mlock(&k[0], k.size());
         }
+        noncetype get_nonce() const { return n; }
         encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
         std::string unbox(const encoded_bytes& ciphertext) {
             std::string m = crypto_box_open_afternm(ciphertext.to_binary(), n.next().to_binary(), k);
