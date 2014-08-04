@@ -47,6 +47,39 @@ go_bandit([](){
             AssertThat(sign_sk_decoded.get().to_binary(), Equals(sign_sk.get().to_binary()));
         });
     });
+
+    describe("nonce", [](){
+        it("can increase basic", [&](){
+            nonce64 n = nonce64(encoded_bytes("00000000000000000000000000000000", encoding::hex), encoded_bytes("0000000000000000", encoding::hex));
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "0000000000000000"));
+            n.increase();
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "0000000000000002"));
+        });        
+        it("can increase with carry", [&](){
+            nonce64 n = nonce64(encoded_bytes("00000000000000000000000000000000", encoding::hex), encoded_bytes("00fffffffffffffe", encoding::hex));
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "00fffffffffffffe"));
+            n.increase();
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "0100000000000000"));
+
+            n = nonce64(encoded_bytes("00000000000000000000000000000000", encoding::hex), encoded_bytes("00ffffffffffffff", encoding::hex));
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "00ffffffffffffff"));
+            n.increase();
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "0100000000000001"));
+        });
+        it("can detect overflow", [&](){
+            nonce64 n = nonce64(encoded_bytes("00000000000000000000000000000000", encoding::hex), encoded_bytes("fffffffffffffffe", encoding::hex));
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "fffffffffffffffe"));
+            n.increase();
+            AssertThrows(std::overflow_error, n.get());
+            AssertThrows(std::overflow_error, n.next());
+
+            n = nonce64(encoded_bytes("00000000000000000000000000000000", encoding::hex), encoded_bytes("ffffffffffffffff", encoding::hex));
+            AssertThat(n.get(encoding::hex).bytes, Equals("00000000000000000000000000000000" "ffffffffffffffff"));
+            n.increase();
+            AssertThrows(std::overflow_error, n.get());
+            AssertThrows(std::overflow_error, n.next());
+        });
+    });
 });
 
 int main(int argc, char ** argv) {
