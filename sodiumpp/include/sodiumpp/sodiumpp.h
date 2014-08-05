@@ -33,11 +33,47 @@ extern "C" {
 namespace sodiumpp {
     std::string crypto_auth(const std::string &m,const std::string &k);
     void crypto_auth_verify(const std::string &a,const std::string &m,const std::string &k);
+    /**
+     * Performs the box operation on message m, using nonce n, from secret key sk to public key pk.
+     * Throws std::invalid_argument if any of the arguments are invalid
+     */
     std::string crypto_box(const std::string &m,const std::string &n,const std::string &pk,const std::string &sk);
+    /**
+     * Generate a new keypair for box operations.
+     * The secret key is stored in sk_string, and the public key is returned.
+     * Throws std::invalid_argument if any of the arguments are invalid.
+     * This function was changed from the official NaCl API: it accepts a reference instead of a pointer to sk_string.
+     */
     std::string crypto_box_keypair(std::string &sk_string);
+    /**
+     * If many box operations are performed between the same pair of keypairs,
+     * The operation can be split in crypto_box_beforenm, which is performed once and crypto_box_afternm, 
+     * which is performed for every message, in order to increase performance.
+     * This function takes a receiver public key pk and a sender secret key sk, and returns the k parameter that should be used in afternm.
+     * Throws std::invalid_argument if any of the arguments are invalid.
+     */
     std::string crypto_box_beforenm(const std::string &pk, const std::string &sk);
+    /**
+     * If many box operations are performed between the same pair of keypairs,
+     * The operation can be split in beforenm, which is performed once and afternm, 
+     * which is performed for every message, in order to increase performance.
+     * This function takes a message m, a nonce n and the parameter k which can be obtained from crypto_box_beforenm.
+     * Throws std::invalid_argument if any of the arguments are invalid.
+     */
     std::string crypto_box_afternm(const std::string &m,const std::string &n,const std::string &k);
+    /**
+     * Unbox a boxed message c, using the nonce n, with the sender's public key pk and the receiver's secret key sk.
+     * Returns the unboxed message.
+     * Throws crypto_error if the ciphertext failed verification, throws std::invalid_argument if any of the arguments are invalid.
+     */
     std::string crypto_box_open(const std::string &c,const std::string &n,const std::string &pk,const std::string &sk);
+    /**
+     * If many unbox operations are performed between the same pair of keypairs,
+     * The operation can be split in crypto_box_beforenm, which is performed once and crypto_box_open_afternm, 
+     * which is performed for every message, in order to increase performance.
+     * This function takes a receiver public key pk and a sender secret key sk, and returns the k parameter that should be used in afternm.
+     * Throws crypto_error if the ciphertext fails verification, throws std::invalid_argument if any of the arguments are invalid.
+     */
     std::string crypto_box_open_afternm(const std::string &c,const std::string &n,const std::string &k);
     std::string crypto_hash(const std::string &m);
     std::string crypto_onetimeauth(const std::string &m,const std::string &k);
@@ -46,6 +82,10 @@ namespace sodiumpp {
     std::string crypto_scalarmult(const std::string &n,const std::string &p);
     std::string crypto_secretbox(const std::string &m,const std::string &n,const std::string &k);
     std::string crypto_secretbox_open(const std::string &c,const std::string &n,const std::string &k);
+    /**
+     * Generate a new keypair for sign operations.
+     * This function was changed from the official NaCl API: it accepts a reference instead of a pointer to sk_string.
+     */
     std::string crypto_sign_keypair(std::string &sk_string);
     std::string crypto_sign_open(const std::string &sm_string, const std::string &pk_string);
     std::string crypto_sign(const std::string &m_string, const std::string &sk_string);
@@ -54,68 +94,124 @@ namespace sodiumpp {
     std::string crypto_shorthash(const std::string& m, const std::string& k);
     std::string randombytes(size_t size);
     
+    /**
+     * Encode the binary string bytes to a hexadecimally encoded string, 2 lowercase hexadecimal digits per byte.
+     */
     std::string bin2hex(const std::string& bytes);
+    /**
+     * Decode the hexadecimally encoded string bytes to a binary string, 2 lowercase hexadecimal digits per byte.
+     */
     std::string hex2bin(const std::string& bytes);
     
+    /**
+     * Securely erases the contents of the string bytes.
+     */
     void memzero(std::string& bytes);
     
+    /**
+     * Exception class for cryptographic errors: failed verifications etc.
+     */
     class crypto_error : public std::runtime_error {
     public:
         crypto_error(const std::string& what) : std::runtime_error(what) {}
     };
     
+    /**
+     * Encoding of a series of bytes.
+     */
     enum class encoding {
-        binary, hex, z85
+        binary, /** No special encoding is applied, the bytes are kept as-is. */
+        hex, /** The bytes are encoded with two lower case hexadecimal digits per byte. */
+        z85 /** The bytes are encoded using Z85 encoding with padding if necessary. */
     };
     
+    /**
+     * Encode binary_bytes to a string of bytes in the specified encoding.
+     */
     std::string encode_from_binary(const std::string& binary_bytes, encoding encoding);
+    /**
+     * Decode encoded_bytes to a string of binary bytes, using the specified encoding.
+     */
     std::string decode_to_binary(const std::string& encoded_bytes, encoding encoding);
     
+
+    /**
+     * Holds a string of bytes in a certain encoding.
+     */
     class encoded_bytes {
     public:
-        encoding encoding;
-        std::string bytes;
+        encoding encoding; /** The encoding that was used */
+        std::string bytes; /** The encoded bytes */
+        /**
+         * Constructor from a string of bytes that is assumed to be encoded in the specified encoding. 
+         */
         encoded_bytes(const std::string& bytes, enum encoding encoding) : bytes(bytes), encoding(encoding) {}
+        /**
+         * Convenience method for quickly getting the binary string corresponding to the encoded bytes.
+         */
         std::string to_binary() const { return decode_to_binary(bytes, encoding); }
+        /**
+         * Return a new encoded_bytes object that contains the same data but encoded with new_encoding.
+         */
         encoded_bytes to(enum encoding new_encoding) {
             return encoded_bytes(encode_from_binary(to_binary(), new_encoding), new_encoding);
         }
     };
     
+    /**
+     * The purpose of a cryptographic key.
+     */
     enum class purpose {
-        box, sign
+        box, /** An NaCl box/unbox key */
+        sign /** An NaCl sign/verify key */
     };
     
+    /**
+     * Holds the lengths of keys for the purpose P
+     */
     template <purpose P>
     struct key_lengths {
-        size_t public_key;
-        size_t secret_key;
+        static const size_t public_key; /** The length in bytes of a public key for the purpose P */
+        static const size_t secret_key; /** The length in bytes of a secret key for the purpose P */
     };
     
     template <>
     struct key_lengths<purpose::box> {
-        size_t public_key = crypto_box_PUBLICKEYBYTES;
-        size_t secret_key = crypto_box_SECRETKEYBYTES;
+        static const size_t public_key = crypto_box_PUBLICKEYBYTES;
+        static const size_t secret_key = crypto_box_SECRETKEYBYTES;
     };
     
     template <>
     struct key_lengths<purpose::sign> {
-        size_t public_key = crypto_sign_PUBLICKEYBYTES;
-        size_t secret_key = crypto_sign_SECRETKEYBYTES;
+        static const size_t public_key = crypto_sign_PUBLICKEYBYTES;
+        static const size_t secret_key = crypto_sign_SECRETKEYBYTES;
     };
     
     template <purpose P> class secret_key;
     
+    /**
+     * Manages a public key.
+     *
+     * The template parameter P is the purpose of this key: at the moment this is either purpose::box or purose::sign.
+     */
     template <purpose P>
     class public_key {
     private:
+        /**
+         * Private default constructor to avoid inproperly constructed public_keys
+         */
         public_key() {}
-        std::string bytes;
+        std::string bytes; /** The binary encoded bytes of this key */
     public:
-        const purpose purpose = P;
+        const purpose purpose = P; /** The purpose of this key */
+        /**
+         * Construct a public_key from encoded bytes
+         */
         public_key(const encoded_bytes& bytes) : bytes(bytes.to_binary()) {}
+        /**
+         * Get the encoding encoded bytes of this public_key
+         */
         encoded_bytes get(encoding encoding=encoding::binary) const { return encoded_bytes(encode_from_binary(bytes, encoding), encoding); }
-        const std::string& get_raw() const { return bytes; }
         friend class secret_key<P>;
     };
     
@@ -124,15 +220,33 @@ namespace sodiumpp {
         return stream << "public_key(\"" << pk.get(encoding::z85).bytes << "\")";
     }
     
+    /**
+     * Manages generation and safekeeping of a secret key.
+     *
+     * The template parameter P is the purpose of this key: at the moment this is either purpose::box or purpose::sign.
+     * 
+     * The memory region that contains the bytes of the secrey key is locked, 
+     * which means it should be allowed to be swapped to disk,
+     * and the bytes are zeroed when the object is destroyed.
+     */
     template <purpose P>
     class secret_key {
         std::string secret_bytes;
     public:
-        const purpose purpose = P;
-        public_key<P> pk;
+        const purpose purpose = P; /** The purpose of this key */
+        public_key<P> pk; /**< The public key corresponding to this secret key */
+        /**
+         * Construct a secret key from a pregenerated public and secret key.
+         */
         secret_key(const public_key<P>& pk, const encoded_bytes& secret_bytes) : pk(pk), secret_bytes(secret_bytes.to_binary()) {}
+        /**
+         * Copy constructor
+         */
         secret_key(const secret_key<P>& other) : secret_bytes(other.secret_bytes), pk(other.pk) {}
         static_assert(P == purpose::box or P == purpose::sign, "purposes other than box and sign are not yet supported");
+        /**
+         * Default constructor: automatically generates new keypair.
+         */
         secret_key() {
             if(P == purpose::box) {
                 pk.bytes = crypto_box_keypair(secret_bytes);
@@ -144,9 +258,16 @@ namespace sodiumpp {
             }
             sodium_mlock(&secret_bytes[0], secret_bytes.size());
         }
+        /**
+         * Get the encoded bytes of the secret key.
+         */
         encoded_bytes get(encoding encoding=encoding::binary) const { return encoded_bytes(encode_from_binary(secret_bytes, encoding), encoding); }
+        /**
+         * Securely erase and unlock the memory containing the secret key.
+         */
         ~secret_key() {
             memzero(secret_bytes);
+            sodium_munlock(&secret_bytes[0], secret_bytes.size());
         }
     };
     
@@ -155,20 +276,39 @@ namespace sodiumpp {
         return stream << sk.pk << ", secret_key(\"" << sk.get(encoding::z85).bytes << "\")";
     }
 
+    /* Convenience typedefs */
     typedef public_key<purpose::box> box_public_key;
     typedef secret_key<purpose::box> box_secret_key;
     typedef public_key<purpose::sign> sign_public_key;
     typedef secret_key<purpose::sign> sign_secret_key;
     
+    /**
+     * Nonce type that consists of a constant part and a sequential part that can be incremented.
+     *
+     * The template parameter sequentialbytes specifies the number of bytes to allocate to the sequential part.
+     * This value must be at least 1, and at most crypto_box_NONCEBYTES.
+     *
+     * Any remaining bytes (crypto_box_NONCEBYTES - sequentialbytes) are allocated to the constant part.
+     */
     template <unsigned int sequentialbytes>
     class nonce {
     private:
-        std::string bytes;
-        bool overflow;
+        std::string bytes; /** The current bytes of this nonce, it consists of the constant bytes followed by the sequential bytes in big-endian format. */ 
+        bool overflow; /** Indicates an overflow of the sequential part of the nonce if true. */
     public:
-        static const unsigned int constantbytes = crypto_box_NONCEBYTES-sequentialbytes;
+        static const unsigned int constantbytes = crypto_box_NONCEBYTES-sequentialbytes; /** The number of bytes allocated to the constant part */
         static_assert(sequentialbytes <= crypto_box_NONCEBYTES and sequentialbytes > 0, "sequentialbytes can be at most crypto_box_NONCEBYTES and must be greater than 0");
+        /**
+         * Default constructor: initializes the constant and sequential parts to zeroes.
+         */
         nonce() : nonce(encoded_bytes("", encoding::binary), false, false) {}
+        /**
+         * Construct a nonce from the encoded constant.
+         * If the length of the constant is 0 and generate_constant is true (the default), the constant bytes will be initialized randomly, and if generated_constant is false they will be set to zero.
+         * If the length of the constant is > 0, the length must be exactly constantbytes and will be used to initialize the constant part of the nonce.
+         * Throws std::invalid_argument if constant does not have the correct length.
+         * If uneven is true the sequential part of the generated nonces will always be uneven, otherwise the sequential part will always be even.
+         */
         nonce(const encoded_bytes& constant, bool uneven, bool generate_constant=true) : bytes(crypto_box_NONCEBYTES, 0), overflow(false) {
             std::string constant_decoded = constant.to_binary();
             if(constant_decoded.size() == 0) {
@@ -185,9 +325,37 @@ namespace sodiumpp {
                 bytes[bytes.size()-1] = 1;
             }
         }
-        nonce(const encoded_bytes& constant, const encoded_bytes& sequentialpart) : bytes(constant.to_binary() + sequentialpart.to_binary()) {}
-        nonce(const encoded_bytes& encoded) : bytes(encoded.to_binary()) {}
-        void increase() {
+        /**
+         * Construct from encoded constant and sequential parts.
+         * Throws std::invalid_argument if constant and/or sequentialpart do not have the correct number of decoded bytes.
+         */
+        nonce(const encoded_bytes& constant, const encoded_bytes& sequentialpart) {
+            std::string constant_decoded = constant.to_binary();
+            if(constant_decoded.size() != constantbytes) {
+                throw std::invalid_argument("incorrect number of decoded bytes in constant");
+            }
+            std::string sequentialpart_decoded = sequentialpart.to_binary();
+            if(sequentialpart_decoded.size() != sequentialbytes) {
+                throw std::invalid_argument("incorrect number of decoded bytes in sequential part");
+            }
+            bytes = constant_decoded + sequentialpart_decoded;
+        }
+        /**
+         * Construct from encoded nonce.
+         * Throws std::invalid_argument if the number of decoded bytes is not crypto_box_NONCEBYTES.
+         */
+        nonce(const encoded_bytes& encoded) {
+            std::string decoded = encoded.to_binary();
+            if(decoded.size() != crypto_box_NONCEBYTES) {
+                throw std::invalid_argument("incorrect number of decoded bytes");
+            }
+            bytes = decoded;
+        }
+        /**
+         * Increment the sequential part of the nonce by 2.
+         * This function does NOT throw an exception on overflow, but delays this until an attempt is made to read the sequential part.
+         */
+        void increment() {
             unsigned int carry = 2;
             for(int64_t i = bytes.size()-1; i >= constantbytes && carry > 0; --i) {
                 unsigned int current = *reinterpret_cast<unsigned char *>(&bytes[i]);
@@ -199,10 +367,18 @@ namespace sodiumpp {
                 overflow = true;
             }
         }
+        /**
+         * Increments the sequential part of the nonce by 2 and returns the new value of the nonce in the specified encoding.
+         * Throws std::overflow_error if an overflow occurred during this or a previous increment.
+         */
         encoded_bytes next(encoding encoding=encoding::binary) {
-            increase();
+            increment();
             return get(encoding);
         }
+        /**
+         * Returns the current value of the nonce in the specified encoding.
+         * Throws std::overflow_error if an overflow occurred during a previous increment.
+         */
         encoded_bytes get(encoding encoding=encoding::binary) const {
             if(overflow) {
                 throw std::overflow_error("Sequential part of nonce has overflowed");
@@ -210,10 +386,22 @@ namespace sodiumpp {
                 return encoded_bytes(encode_from_binary(bytes, encoding), encoding);
             }
         }
-        encoded_bytes get_constant(encoding encoding=encoding::binary) const { return encoded_bytes(encode_from_binary(bytes.substr(0, constantbytes), encoding), encoding); }
-        encoded_bytes get_sequential(encoding encoding=encoding::binary) const { return encoded_bytes(encode_from_binary(bytes.substr(constantbytes, sequentialbytes), encoding), encoding); }
+        /**
+         * Returns the value of the constant part of the nonce in the specified encoding.
+         */
+        encoded_bytes get_constant(encoding encoding=encoding::binary) const { 
+            return encoded_bytes(encode_from_binary(bytes.substr(0, constantbytes), encoding), encoding); 
+        }
+        /**
+         * Returns the current value of the sequential part of the nonce in the specified encoding.
+         * Throws std::overflow_error if an overflow occurred during a previous increment.
+         */
+        encoded_bytes get_sequential(encoding encoding=encoding::binary) const { 
+            return encoded_bytes(get(encoding::binary).bytes.substr(constantbytes, sequentialbytes), encoding); 
+        }
     };
     
+    /* Convenience typedefs */
     typedef nonce<8> nonce64;
     typedef nonce<4> nonce32;
     typedef nonce<2> nonce16;
@@ -224,54 +412,117 @@ namespace sodiumpp {
         return s;
     }
     
+    /**
+     * Boxes a series of messages between sender's secret key and a receiver's public key using automatically generated nonces.
+     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven otherwise.
+     * The constant part of nonces is randomly generated or supplied by the user.
+     *
+     * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
+     *
+     * Splits the box operation into crypto_box_beforenm and crypto_box_afternm for increased performance.
+     * The beforenm parameter is locked into memory for the lifetime of the boxer and securely erased at destroy time.
+     */
     template <typename noncetype>
     class boxer {
     private:
         noncetype n;
         std::string k;
     public:
+        /**
+         * Construct from the receiver's public key pk and the sender's secret key sk
+         */
         boxer(const box_public_key& pk, const box_secret_key& sk) : boxer(pk, sk, encoded_bytes("", encoding::binary)) {}
+        /**
+         * Construct from the receiver's public key pk, the sender's secret key sk and an encoded constant part for the nonces.
+         */
         boxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, sk.pk.get().to_binary() > pk.get().to_binary()) {
             sodium_mlock(&k[0], k.size());
         }
+        /**
+         * Returns the current nonce.
+         */
         noncetype get_nonce() const { return n; }
+        /**
+         * Convenience method to get the constant part of the nonce.
+         */
         encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
+        /**
+         * Box the message m and return the boxed message in the specified encoding.
+         * Automatically increments the nonce after each message.
+         * The nonce that was used will be put in used_n.
+         */
         encoded_bytes box(std::string message, noncetype& used_n, encoding encoding=encoding::binary) {
             std::string c = crypto_box_afternm(message, n.get().to_binary(), k);
             used_n = n;
-            n.increase();
+            n.increment();
             return encoded_bytes(encode_from_binary(c, encoding), encoding);
         }
+        /**
+         * Box the message m and return the boxed message in the specified encoding.
+         * Automatically increments the nonce after each message.
+         */
         encoded_bytes box(std::string message, encoding encoding=encoding::binary) {
             noncetype current_n;
             return box(message, current_n, encoding);
         }
+        /**
+         * Securely erase the crypto_box_afternm parameter,
+         * and unlock the memory that contained it.
+         */
         ~boxer() {
             memzero(k);
             sodium_munlock(&k[0], k.size());
         }
     };
     
+    /**
+     * Unboxes a series of messages between sender's public key and a receiver's secret key using automatically generated nonces.
+     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven otherwise.
+     * The constant part of nonces is supplied by the user.
+     *
+     * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
+     *
+     * Splits the box operation into crypto_box_beforenm and crypto_box_open_afternm for increased performance.
+     * The beforenm parameter is locked into memory for the lifetime of the unboxer and securely erased at destroy time.
+     */
     template <typename noncetype>
     class unboxer {
     private:
         noncetype n;
         std::string k;
     public:
+        /**
+         * Construct from the sender's public key pk, the receiver's secret key sk and an encoded constant part for the nonces.
+         */
         unboxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, pk.get().to_binary() > sk.pk.get().to_binary()) {
             sodium_mlock(&k[0], k.size());
         }
+        /**
+         * Returns the current nonce.
+         */
         noncetype get_nonce() const { return n; }
         encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
+        /**
+         * Unbox the encoded message m and return the unboxed message.
+         * Automatically increments the nonce after each message.
+         */
         std::string unbox(const encoded_bytes& ciphertext) {
             std::string m = crypto_box_open_afternm(ciphertext.to_binary(), n.get().to_binary(), k);
-            n.increase();
+            n.increment();
             return m;
         }
+        /**
+         * Unbox the encoded message m and return the unboxed message.
+         * Does NOT use or change the current nonce, but uses the nonce in n_override instead.
+         */
         std::string unbox(const encoded_bytes& ciphertext, const noncetype& n_override) const {
             std::string m = crypto_box_open_afternm(ciphertext.to_binary(), n_override.get().to_binary(), k);
             return m;
         }
+        /**
+         * Securely erase the crypto_box_afternm parameter,
+         * and unlock the memory that contained it.
+         */
         ~unboxer() {
             memzero(k);
             sodium_munlock(&k[0], k.size());
