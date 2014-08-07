@@ -226,7 +226,7 @@ namespace sodiumpp {
      * The template parameter P is the purpose of this key: at the moment this is either purpose::box or purpose::sign.
      * 
      * The memory region that contains the bytes of the secrey key is locked, 
-     * which means it should be allowed to be swapped to disk,
+     * which means it should not be allowed to be swapped to disk,
      * and the bytes are zeroed when the object is destroyed.
      */
     template <purpose P>
