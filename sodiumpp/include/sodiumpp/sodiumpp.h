@@ -273,7 +273,7 @@ namespace sodiumpp {
             sodium_munlock(&secret_bytes[0], secret_bytes.size());
         }
         bool operator==(const secret_key<P>& other) {
-            return secret_bytes == other.secret_bytes and pk == other.pk;
+            return secret_bytes.size() == other.secret_bytes.size() and sodium_memcmp(&secret_bytes[0], &(other.secretbytes[0]), secret_bytes.size()) and pk == other.pk;
         }
     };
     
