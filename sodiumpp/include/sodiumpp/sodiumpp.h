@@ -212,6 +212,9 @@ namespace sodiumpp {
          * Get the encoding encoded bytes of this public_key
          */
         encoded_bytes get(encoding encoding=encoding::binary) const { return encoded_bytes(encode_from_binary(bytes, encoding), encoding); }
+        bool operator==(const public_key<P>& other) {
+            return bytes == other.bytes;
+        }
         friend class secret_key<P>;
     };
     
@@ -268,6 +271,9 @@ namespace sodiumpp {
         ~secret_key() {
             memzero(secret_bytes);
             sodium_munlock(&secret_bytes[0], secret_bytes.size());
+        }
+        bool operator==(const secret_key<P>& other) {
+            return secret_bytes == other.secret_bytes and pk == other.pk;
         }
     };
     
@@ -398,6 +404,9 @@ namespace sodiumpp {
          */
         encoded_bytes get_sequential(encoding encoding=encoding::binary) const { 
             return encoded_bytes(get(encoding::binary).bytes.substr(constantbytes, sequentialbytes), encoding); 
+        }
+        bool operator==(const nonce<sequentialbytes>& other) {
+            return bytes == other.bytes and overflow = other.overflow;
         }
     };
     
