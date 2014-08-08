@@ -62,8 +62,8 @@ int main(int argc, const char ** argv) {
 }
 ```
 
-Tutorial
---------
+High-level API Overview
+-----------------------
 
 The `public_key<purpose P>` and `secret_key<purpose P>` are used to generate and store public and secret keys. Secret keys are locked into memory so they cannot be swapped out to disk, and are securely erased when the key's destructor is called. The template parameter `P` gives the purpose of the key: at the moment this is either `purpose::box` for box/unbox operations and `purpose::sign` for sign/verify operations. Having seperate types for public/secret keys and different purposes helps to avoid mixing them up.
 
