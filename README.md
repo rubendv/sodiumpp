@@ -75,4 +75,4 @@ The `boxer<typename noncetype>` and `unboxer<typename noncetype>` classes provid
 
 Throughout the API a string wrapper `encoded_bytes` is used, this stores a normal string alongside an encoding such as plain binary, hexadecimal or Z85 encoding to allow easy handling of strings in these encodings.
 
-For more detailed API documentation, have a look at the comments in sodiumpp/include/sodiumpp/sodiumpp.h.
+For more detailed API documentation, have a look at the comments in src/include/sodiumpp/sodiumpp.h.
