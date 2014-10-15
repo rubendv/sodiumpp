@@ -518,6 +518,9 @@ namespace sodiumpp {
          * Returns the current nonce.
          */
         noncetype get_nonce() const { return n; }
+        /**
+         * Convenience method to get the constant part of the nonce.
+         */
         encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
         /**
          * Unbox the encoded message m and return the unboxed message.
