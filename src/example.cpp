@@ -22,6 +22,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sodiumpp/sodiumpp.h>
+#include <sodiumpp/serializer.h>
 #include <string>
 #include <iostream>
 using namespace sodiumpp;
@@ -55,5 +56,17 @@ int main(int argc, const char ** argv) {
     std::cout << "Nonce (hex): " << used_n.get(encoding::hex).bytes << std::endl;
     std::cout << "Boxed message (z85): " << boxed.to(encoding::z85).bytes << std::endl;
     std::cout << "Unboxed message: " << unboxed;
+
+    std::stringstream ss;
+    serializer<std::stringstream> s(ss);
+    s.put<std::string>("Hello, world!").put<uint16_t>(2).put<uint16_t>(3).put<float>(3.14).put<int>(0xdeadbeef);
+    std::cout << "Serialized message: " << encoded_bytes(ss.str(), encoding::binary).to(encoding::hex).bytes << std::endl;
+    std::cout 
+        << "Deserialized message: " 
+        << s.get<std::string>() << " " 
+        << s.get<uint16_t>() << " " 
+        << s.get<uint16_t>() << " "
+        << s.get<float>() << " "
+        << "0x" << std::hex << s.get<int>() << std::endl;
     return 0;
 }
