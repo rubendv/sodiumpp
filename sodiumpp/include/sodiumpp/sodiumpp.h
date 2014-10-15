@@ -307,10 +307,13 @@ namespace sodiumpp {
     template <unsigned int sequentialbytes>
     class nonce {
     private:
-        std::string bytes; /** The current bytes of this nonce, it consists of the constant bytes followed by the sequential bytes in big-endian format. */ 
-        bool overflow; /** Indicates an overflow of the sequential part of the nonce if true. */
+        /** The current bytes of this nonce, it consists of the constant bytes followed by the sequential bytes in big-endian format. */
+        std::string bytes;  
+        /** Indicates an overflow of the sequential part of the nonce if true. */
+        bool overflow; 
     public:
-        static const unsigned int constantbytes = crypto_box_NONCEBYTES-sequentialbytes; /** The number of bytes allocated to the constant part */
+        /** The number of bytes allocated to the constant part */
+        static const unsigned int constantbytes = crypto_box_NONCEBYTES-sequentialbytes; 
         static_assert(sequentialbytes <= crypto_box_NONCEBYTES and sequentialbytes > 0, "sequentialbytes can be at most crypto_box_NONCEBYTES and must be greater than 0");
         /**
          * Default constructor: initializes the constant and sequential parts to zeroes.
@@ -343,7 +346,7 @@ namespace sodiumpp {
          * Construct from encoded constant and sequential parts.
          * Throws std::invalid_argument if constant and/or sequentialpart do not have the correct number of decoded bytes.
          */
-        nonce(const encoded_bytes& constant, const encoded_bytes& sequentialpart) {
+        nonce(const encoded_bytes& constant, const encoded_bytes& sequentialpart) : overflow(false) {
             std::string constant_decoded = constant.to_binary();
             if(constant_decoded.size() != constantbytes) {
                 throw std::invalid_argument("incorrect number of decoded bytes in constant");
@@ -414,10 +417,10 @@ namespace sodiumpp {
             return encoded_bytes(get(encoding::binary).bytes.substr(constantbytes, sequentialbytes), encoding); 
         }
         bool operator==(const nonce<sequentialbytes>& other) {
-            return bytes == other.bytes and overflow = other.overflow;
+            return bytes == other.bytes and overflow == other.overflow;
         }
     };
-    
+
     /* Convenience typedefs */
     typedef nonce<8> nonce64;
     typedef nonce<4> nonce32;
