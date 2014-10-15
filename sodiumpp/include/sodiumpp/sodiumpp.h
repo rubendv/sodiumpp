@@ -107,6 +107,14 @@ namespace sodiumpp {
      * Securely erases the contents of the string bytes.
      */
     void memzero(std::string& bytes);
+    /**
+     * Locks the memory used by the string bytes in memory, preventing it from being swapped out.
+     */
+    void mlock(std::string& bytes);
+    /**
+     * Unlocks the memory used by the string bytes, allowing it to be swapped out again.
+     */
+    void munlock(std::string& bytes);
     
     /**
      * Exception class for cryptographic errors: failed verifications etc.
@@ -259,7 +267,7 @@ namespace sodiumpp {
                 // Should be caught by the static_assert above
                 std::invalid_argument("purposes other than box and sign are not yet supported");
             }
-            sodium_mlock(&secret_bytes[0], secret_bytes.size());
+            mlock(secret_bytes);
         }
         /**
          * Get the encoded bytes of the secret key.
@@ -270,7 +278,7 @@ namespace sodiumpp {
          */
         ~secret_key() {
             memzero(secret_bytes);
-            sodium_munlock(&secret_bytes[0], secret_bytes.size());
+            munlock(secret_bytes);
         }
         bool operator==(const secret_key<P>& other) {
             return secret_bytes.size() == other.secret_bytes.size() and sodium_memcmp(&secret_bytes[0], &(other.secretbytes[0]), secret_bytes.size()) and pk == other.pk;
@@ -445,7 +453,7 @@ namespace sodiumpp {
          * Construct from the receiver's public key pk, the sender's secret key sk and an encoded constant part for the nonces.
          */
         boxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, sk.pk.get().to_binary() > pk.get().to_binary()) {
-            sodium_mlock(&k[0], k.size());
+            mlock(k);
         }
         /**
          * Returns the current nonce.
@@ -480,7 +488,7 @@ namespace sodiumpp {
          */
         ~boxer() {
             memzero(k);
-            sodium_munlock(&k[0], k.size());
+            munlock(k);
         }
     };
     
@@ -504,7 +512,7 @@ namespace sodiumpp {
          * Construct from the sender's public key pk, the receiver's secret key sk and an encoded constant part for the nonces.
          */
         unboxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, pk.get().to_binary() > sk.pk.get().to_binary()) {
-            sodium_mlock(&k[0], k.size());
+            mlock(k);
         }
         /**
          * Returns the current nonce.
@@ -534,7 +542,7 @@ namespace sodiumpp {
          */
         ~unboxer() {
             memzero(k);
-            sodium_munlock(&k[0], k.size());
+            munlock(k);
         }
     };
 }

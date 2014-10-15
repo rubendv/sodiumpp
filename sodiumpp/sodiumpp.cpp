@@ -313,6 +313,14 @@ void sodiumpp::memzero(std::string& bytes) {
     sodium_memzero((unsigned char *)&bytes[0], bytes.size());
 }
 
+void sodiumpp::mlock(std::string& bytes) {
+    sodium_mlock((unsigned char *)&bytes[0], bytes.size());
+}
+
+void sodiumpp::munlock(std::string& bytes) {
+    sodium_munlock((unsigned char *)&bytes[0], bytes.size());
+}
+
 std::string sodiumpp::crypto_shorthash(const std::string& m, const std::string& k) {
     if(k.size() != crypto_shorthash_KEYBYTES) throw "incorrect key length";
     std::string out(crypto_shorthash_BYTES, 0);
@@ -325,7 +333,6 @@ std::string sodiumpp::randombytes(size_t size) {
     randombytes_buf(&buf[0], size);
     return buf;
 }
-
 
 std::string sodiumpp::encode_from_binary(const std::string& binary_bytes, sodiumpp::encoding encoding) {
     switch(encoding) {
@@ -347,4 +354,3 @@ std::string sodiumpp::decode_to_binary(const std::string& encoded_bytes, sodiump
             return z85::decode_with_padding(encoded_bytes);
     }
 }
-
