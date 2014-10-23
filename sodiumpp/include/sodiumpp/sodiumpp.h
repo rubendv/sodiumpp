@@ -25,6 +25,9 @@
 #define sodiumpp_h
 
 #include <iostream>
+#include <string>
+#include <stdexcept>
+
 extern "C" {
 #include <sodium.h>
 }
@@ -136,11 +139,11 @@ namespace sodiumpp {
     /**
      * Encode binary_bytes to a string of bytes in the specified encoding.
      */
-    std::string encode_from_binary(const std::string& binary_bytes, encoding encoding);
+    std::string encode_from_binary(const std::string& binary_bytes, encoding enc);
     /**
      * Decode encoded_bytes to a string of binary bytes, using the specified encoding.
      */
-    std::string decode_to_binary(const std::string& encoded_bytes, encoding encoding);
+    std::string decode_to_binary(const std::string& encoded_bytes, encoding enc);
     
 
     /**
@@ -148,16 +151,16 @@ namespace sodiumpp {
      */
     class encoded_bytes {
     public:
-        encoding encoding; /** The encoding that was used */
+        encoding enc; /** The encoding that was used */
         std::string bytes; /** The encoded bytes */
         /**
          * Constructor from a string of bytes that is assumed to be encoded in the specified encoding. 
          */
-        encoded_bytes(const std::string& bytes, enum encoding encoding) : bytes(bytes), encoding(encoding) {}
+        encoded_bytes(const std::string& bytes, enum encoding enc) : bytes(bytes), enc(enc) {}
         /**
          * Convenience method for quickly getting the binary string corresponding to the encoded bytes.
          */
-        std::string to_binary() const { return decode_to_binary(bytes, encoding); }
+        std::string to_binary() const { return decode_to_binary(bytes, enc); }
         /**
          * Return a new encoded_bytes object that contains the same data but encoded with new_encoding.
          */
@@ -169,40 +172,40 @@ namespace sodiumpp {
     /**
      * The purpose of a cryptographic key.
      */
-    enum class purpose {
+    enum class key_purpose {
         box, /** An NaCl box/unbox key */
         sign /** An NaCl sign/verify key */
     };
     
     /**
-     * Holds the lengths of keys for the purpose P
+     * Holds the lengths of keys for the key_purpose P
      */
-    template <purpose P>
+    template <key_purpose P>
     struct key_lengths {
-        static const size_t public_key; /** The length in bytes of a public key for the purpose P */
-        static const size_t secret_key; /** The length in bytes of a secret key for the purpose P */
+        static const size_t public_key; /** The length in bytes of a public key for the key_purpose P */
+        static const size_t secret_key; /** The length in bytes of a secret key for the key_purpose P */
     };
     
     template <>
-    struct key_lengths<purpose::box> {
+    struct key_lengths<key_purpose::box> {
         static const size_t public_key = crypto_box_PUBLICKEYBYTES;
         static const size_t secret_key = crypto_box_SECRETKEYBYTES;
     };
     
     template <>
-    struct key_lengths<purpose::sign> {
+    struct key_lengths<key_purpose::sign> {
         static const size_t public_key = crypto_sign_PUBLICKEYBYTES;
         static const size_t secret_key = crypto_sign_SECRETKEYBYTES;
     };
     
-    template <purpose P> class secret_key;
+    template <key_purpose P> class secret_key;
     
     /**
      * Manages a public key.
      *
-     * The template parameter P is the purpose of this key: at the moment this is either purpose::box or purose::sign.
+     * The template parameter P is the key_purpose of this key: at the moment this is either key_purpose::box or purose::sign.
      */
-    template <purpose P>
+    template <key_purpose P>
     class public_key {
     private:
         /**
@@ -211,7 +214,7 @@ namespace sodiumpp {
         public_key() {}
         std::string bytes; /** The binary encoded bytes of this key */
     public:
-        const purpose purpose = P; /** The purpose of this key */
+        const key_purpose purpose = P; /** The purpose of this key */
         /**
          * Construct a public_key from encoded bytes
          */
@@ -219,14 +222,14 @@ namespace sodiumpp {
         /**
          * Get the encoding encoded bytes of this public_key
          */
-        encoded_bytes get(encoding encoding=encoding::binary) const { return encoded_bytes(encode_from_binary(bytes, encoding), encoding); }
+        encoded_bytes get(encoding enc=encoding::binary) const { return encoded_bytes(encode_from_binary(bytes, enc), enc); }
         bool operator==(const public_key<P>& other) {
             return bytes == other.bytes;
         }
         friend class secret_key<P>;
     };
     
-    template <sodiumpp::purpose P>
+    template <sodiumpp::key_purpose P>
     std::ostream& operator<<(std::ostream& stream, const sodiumpp::public_key<P>& pk) {
         return stream << "public_key(\"" << pk.get(encoding::z85).bytes << "\")";
     }
@@ -234,17 +237,17 @@ namespace sodiumpp {
     /**
      * Manages generation and safekeeping of a secret key.
      *
-     * The template parameter P is the purpose of this key: at the moment this is either purpose::box or purpose::sign.
+     * The template parameter P is the purpose of this key: at the moment this is either key_purpose::box or key_purpose::sign.
      * 
      * The memory region that contains the bytes of the secrey key is locked, 
      * which means it should not be allowed to be swapped to disk,
      * and the bytes are zeroed when the object is destroyed.
      */
-    template <purpose P>
+    template <key_purpose P>
     class secret_key {
         std::string secret_bytes;
     public:
-        const purpose purpose = P; /** The purpose of this key */
+        const key_purpose purpose = P; /** The purpose of this key */
         public_key<P> pk; /**< The public key corresponding to this secret key */
         /**
          * Construct a secret key from a pregenerated public and secret key.
@@ -254,14 +257,14 @@ namespace sodiumpp {
          * Copy constructor
          */
         secret_key(const secret_key<P>& other) : secret_bytes(other.secret_bytes), pk(other.pk) {}
-        static_assert(P == purpose::box or P == purpose::sign, "purposes other than box and sign are not yet supported");
+        static_assert(P == key_purpose::box or P == key_purpose::sign, "purposes other than box and sign are not yet supported");
         /**
          * Default constructor: automatically generates new keypair.
          */
         secret_key() {
-            if(P == purpose::box) {
+            if(P == key_purpose::box) {
                 pk.bytes = crypto_box_keypair(secret_bytes);
-            } else if(P == purpose::sign) {
+            } else if(P == key_purpose::sign) {
                 pk.bytes = crypto_sign_keypair(secret_bytes);
             } else {
                 // Should be caught by the static_assert above
@@ -272,7 +275,7 @@ namespace sodiumpp {
         /**
          * Get the encoded bytes of the secret key.
          */
-        encoded_bytes get(encoding encoding=encoding::binary) const { return encoded_bytes(encode_from_binary(secret_bytes, encoding), encoding); }
+        encoded_bytes get(encoding enc=encoding::binary) const { return encoded_bytes(encode_from_binary(secret_bytes, enc), enc); }
         /**
          * Securely erase and unlock the memory containing the secret key.
          */
@@ -285,16 +288,16 @@ namespace sodiumpp {
         }
     };
     
-    template <sodiumpp::purpose P>
+    template <sodiumpp::key_purpose P>
     std::ostream& operator<<(std::ostream& stream, const sodiumpp::secret_key<P>& sk) {
         return stream << sk.pk << ", secret_key(\"" << sk.get(encoding::z85).bytes << "\")";
     }
 
     /* Convenience typedefs */
-    typedef public_key<purpose::box> box_public_key;
-    typedef secret_key<purpose::box> box_secret_key;
-    typedef public_key<purpose::sign> sign_public_key;
-    typedef secret_key<purpose::sign> sign_secret_key;
+    typedef public_key<key_purpose::box> box_public_key;
+    typedef secret_key<key_purpose::box> box_secret_key;
+    typedef public_key<key_purpose::sign> sign_public_key;
+    typedef secret_key<key_purpose::sign> sign_secret_key;
     
     /**
      * Nonce type that consists of a constant part and a sequential part that can be incremented.
@@ -388,33 +391,33 @@ namespace sodiumpp {
          * Increments the sequential part of the nonce by 2 and returns the new value of the nonce in the specified encoding.
          * Throws std::overflow_error if an overflow occurred during this or a previous increment.
          */
-        encoded_bytes next(encoding encoding=encoding::binary) {
+        encoded_bytes next(encoding enc=encoding::binary) {
             increment();
-            return get(encoding);
+            return get(enc);
         }
         /**
          * Returns the current value of the nonce in the specified encoding.
          * Throws std::overflow_error if an overflow occurred during a previous increment.
          */
-        encoded_bytes get(encoding encoding=encoding::binary) const {
+        encoded_bytes get(encoding enc=encoding::binary) const {
             if(overflow) {
                 throw std::overflow_error("Sequential part of nonce has overflowed");
             } else {
-                return encoded_bytes(encode_from_binary(bytes, encoding), encoding);
+                return encoded_bytes(encode_from_binary(bytes, enc), enc);
             }
         }
         /**
          * Returns the value of the constant part of the nonce in the specified encoding.
          */
-        encoded_bytes get_constant(encoding encoding=encoding::binary) const { 
-            return encoded_bytes(encode_from_binary(bytes.substr(0, constantbytes), encoding), encoding); 
+        encoded_bytes get_constant(encoding enc=encoding::binary) const { 
+            return encoded_bytes(encode_from_binary(bytes.substr(0, constantbytes), enc), enc); 
         }
         /**
          * Returns the current value of the sequential part of the nonce in the specified encoding.
          * Throws std::overflow_error if an overflow occurred during a previous increment.
          */
-        encoded_bytes get_sequential(encoding encoding=encoding::binary) const { 
-            return encoded_bytes(get(encoding::binary).bytes.substr(constantbytes, sequentialbytes), encoding); 
+        encoded_bytes get_sequential(encoding enc=encoding::binary) const { 
+            return encoded_bytes(get(encoding::binary).bytes.substr(constantbytes, sequentialbytes), enc); 
         }
         bool operator==(const nonce<sequentialbytes>& other) {
             return bytes == other.bytes and overflow == other.overflow;
@@ -465,25 +468,25 @@ namespace sodiumpp {
         /**
          * Convenience method to get the constant part of the nonce.
          */
-        encoded_bytes get_nonce_constant(encoding encoding=encoding::binary) const { return n.get_constant(encoding); }
+        encoded_bytes get_nonce_constant(encoding enc=encoding::binary) const { return n.get_constant(enc); }
         /**
          * Box the message m and return the boxed message in the specified encoding.
          * Automatically increments the nonce after each message.
          * The nonce that was used will be put in used_n.
          */
-        encoded_bytes box(std::string message, noncetype& used_n, encoding encoding=encoding::binary) {
+        encoded_bytes box(std::string message, noncetype& used_n, encoding enc=encoding::binary) {
             std::string c = crypto_box_afternm(message, n.get().to_binary(), k);
             used_n = n;
             n.increment();
-            return encoded_bytes(encode_from_binary(c, encoding), encoding);
+            return encoded_bytes(encode_from_binary(c, enc), enc);
         }
         /**
          * Box the message m and return the boxed message in the specified encoding.
          * Automatically increments the nonce after each message.
          */
-        encoded_bytes box(std::string message, encoding encoding=encoding::binary) {
+        encoded_bytes box(std::string message, encoding enc=encoding::binary) {
             noncetype current_n;
-            return box(message, current_n, encoding);
+            return box(message, current_n, enc);
         }
         /**
          * Securely erase the crypto_box_afternm parameter,
