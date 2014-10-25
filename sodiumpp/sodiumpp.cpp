@@ -334,8 +334,8 @@ std::string sodiumpp::randombytes(size_t size) {
     return buf;
 }
 
-std::string sodiumpp::encode_from_binary(const std::string& binary_bytes, sodiumpp::encoding encoding) {
-    switch(encoding) {
+std::string sodiumpp::encode_from_binary(const std::string& binary_bytes, sodiumpp::encoding enc) {
+    switch(enc) {
         case encoding::binary:
             return binary_bytes;
         case encoding::hex:
@@ -344,8 +344,9 @@ std::string sodiumpp::encode_from_binary(const std::string& binary_bytes, sodium
             return z85::encode_with_padding(binary_bytes);
     }
 }
-std::string sodiumpp::decode_to_binary(const std::string& encoded_bytes, sodiumpp::encoding encoding) {
-    switch(encoding) {
+
+std::string sodiumpp::decode_to_binary(const std::string& encoded_bytes, sodiumpp::encoding enc) {
+    switch(enc) {
         case encoding::binary:
             return encoded_bytes;
         case encoding::hex:
