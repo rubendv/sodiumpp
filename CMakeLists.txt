@@ -11,7 +11,7 @@ if(SODIUMPP_MACPORTS)
     link_directories("/opt/local/lib")
 endif()
 
-include_directories($(CMAKE_CURRENT_SOURCE_DIR)/sodiumpp/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/sodiumpp/include)
 
 if(SODIUMPP_STATIC)
 	add_library(sodiumpp STATIC sodiumpp/sodiumpp.cpp sodiumpp/z85/z85.c sodiumpp/z85/z85_impl.cpp)
