@@ -151,8 +151,8 @@ namespace sodiumpp {
      */
     class encoded_bytes {
     public:
-        encoding enc; /** The encoding that was used */
         std::string bytes; /** The encoded bytes */
+        encoding enc; /** The encoding that was used */
         /**
          * Constructor from a string of bytes that is assumed to be encoded in the specified encoding. 
          */
