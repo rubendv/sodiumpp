@@ -437,7 +437,7 @@ namespace sodiumpp {
     
     /**
      * Boxes a series of messages between sender's secret key and a receiver's public key using automatically generated nonces.
-     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven(odd, not divisible by 2) otherwise.
+     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven (odd, not divisible by 2) otherwise.
      * The constant part of nonces is randomly generated or supplied by the user.
      *
      * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
