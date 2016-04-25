@@ -327,7 +327,7 @@ namespace sodiumpp {
          * If the length of the constant is 0 and generate_constant is true (the default), the constant bytes will be initialized randomly, and if generated_constant is false they will be set to zero.
          * If the length of the constant is > 0, the length must be exactly constantbytes and will be used to initialize the constant part of the nonce.
          * Throws std::invalid_argument if constant does not have the correct length.
-         * If uneven is true the sequential part of the generated nonces will always be uneven, otherwise the sequential part will always be even.
+         * If uneven is true the sequential part of the generated nonces will always be uneven (odd, not divisible by 2), otherwise the sequential part will always be even (divisible by 2).
          */
         nonce(const encoded_bytes& constant, bool uneven, bool generate_constant=true) : bytes(crypto_box_NONCEBYTES, 0), overflow(false) {
             std::string constant_decoded = constant.to_binary();
@@ -437,7 +437,7 @@ namespace sodiumpp {
     
     /**
      * Boxes a series of messages between sender's secret key and a receiver's public key using automatically generated nonces.
-     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven otherwise.
+     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven (odd, not divisible by 2) otherwise.
      * The constant part of nonces is randomly generated or supplied by the user.
      *
      * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
@@ -500,7 +500,7 @@ namespace sodiumpp {
     
     /**
      * Unboxes a series of messages between sender's public key and a receiver's secret key using automatically generated nonces.
-     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven otherwise.
+     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven (odd, not divisible by 2) otherwise.
      * The constant part of nonces is supplied by the user.
      *
      * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
