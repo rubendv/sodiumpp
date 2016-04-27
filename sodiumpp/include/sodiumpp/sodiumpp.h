@@ -158,6 +158,10 @@ namespace sodiumpp {
          */
         encoded_bytes(const std::string& bytes, enum encoding enc) : bytes(bytes), enc(enc) {}
         /**
+         * Default constructor creating empty string
+         */
+         encoded_bytes() : encoded_bytes("",encoding::binary) {}
+        /**
          * Convenience method for quickly getting the binary string corresponding to the encoded bytes.
          */
         std::string to_binary() const { return decode_to_binary(bytes, enc); }
@@ -167,6 +171,7 @@ namespace sodiumpp {
         encoded_bytes to(enum encoding new_encoding) {
             return encoded_bytes(encode_from_binary(to_binary(), new_encoding), new_encoding);
         }
+
     };
     
     /**
@@ -434,23 +439,54 @@ namespace sodiumpp {
         s << bin2hex(n.constant()) << " - " << bin2hex(n.sequential());
         return s;
     }
-    
-    /**
-     * Boxes a series of messages between sender's secret key and a receiver's public key using automatically generated nonces.
-     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven (odd, not divisible by 2) otherwise.
-     * The constant part of nonces is randomly generated or supplied by the user.
-     *
-     * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
-     *
-     * Splits the box operation into crypto_box_beforenm and crypto_box_afternm for increased performance.
-     * The beforenm parameter is locked into memory for the lifetime of the boxer and securely erased at destroy time.
-     */
-    template <typename noncetype>
-    class boxer {
-    private:
-        noncetype n;
+
+
+    class boxer_base {
+    protected:
         std::string k;
     public:
+    	boxer_base( const std::string & _k ) :k(_k){}
+
+    	struct boxer_type_shared_key{}; // just a tag, to "name" the constructor
+
+   	protected:
+   		~boxer_base()=default; // to forbid using pointers to this not-virtual base class.
+		};
+    
+    /**
+     * Boxer suppots both public-key crypto and symmetric crypto - it has two possible uses:
+     * 1)
+     * Boxes a series of messages between sender's secret key and a receiver's public key using automatically generated nonces.
+     * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven otherwise.
+     *
+     * The constant part of nonces is randomly generated or supplied by the user.
+     * In case of public-key it optimizes operation:
+     * Splits the box operation into crypto_box_beforenm and crypto_box_afternm for increased performance.
+     *
+     * The beforenm parameter is locked into memory for the lifetime of the boxer and securely erased at destroy time.
+     *
+     * or instead: 
+     * 2) (for constructors marked with first argument type boxer_type_shared_key) it does:
+     * Boxes a series of messages between sender and receiver who both have same secret shared-key.
+     * The sequential part of nonces is even if user sets option use_nonce_even. Otherwise it is odd.
+     * The callers must ensure, in some higher protocol, that Alice uses use_nonce_even==true and Bob ==false (or vice-versa).
+     * (If the higher protocol involves public keys then perhaps it can use same trick with lexicographical comparsion as 
+     * described above)
+     * You can define nonce_constant here too.
+     * 
+     * In all cases:
+     * the data is encrypted, and authenticated.
+     * 
+     * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
+     *
+     * 
+     */
+    template <typename noncetype>
+    class boxer final : public boxer_base {
+    private:
+        noncetype n;
+    public:
+
         /**
          * Construct from the receiver's public key pk and the sender's secret key sk
          */
@@ -458,10 +494,28 @@ namespace sodiumpp {
         /**
          * Construct from the receiver's public key pk, the sender's secret key sk and an encoded constant part for the nonces.
          */
-        boxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, sk.pk.get().to_binary() > pk.get().to_binary()) {
+        boxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : boxer_base(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, sk.pk.get().to_binary() > pk.get().to_binary()) {
             mlock(k);
         }
         /**
+         * Construct from the secret shared-key. You must make sure that one side of connection
+         * calls this with use nonce_is_even==true and other with ==false, otherwise this will be insecure!
+         * (though we hope such case would be detecte/asserted by recipient, so it should come up in testing)
+         */
+        boxer(boxer_type_shared_key , bool use_nonce_even, const encoded_bytes& secret_shared_key,
+        	const encoded_bytes& nonce_constant)
+        // TODO: make sure the k is mlock'ed before it is initialized with a value
+        : boxer_base(secret_shared_key.to_binary()),
+        n( nonce_constant , use_nonce_even )
+        {
+        	mlock(k);
+      	}
+
+        boxer(boxer_type_shared_key , bool use_nonce_even, const encoded_bytes& secret_shared_key)
+        : boxer( boxer_type_shared_key() , use_nonce_even , secret_shared_key,  encoded_bytes("", encoding::binary) )
+        {	}
+
+        /*
          * Returns the current nonce.
          */
         noncetype get_nonce() const { return n; }
@@ -499,25 +553,42 @@ namespace sodiumpp {
     };
     
     /**
+     * Unboxer suppots both public-key crypto and symmetric crypto - it has two possible uses:
+     * 1)
      * Unboxes a series of messages between sender's public key and a receiver's secret key using automatically generated nonces.
+     * or
+     * 2) Unboxes such messages but created by sender using same secret shared-key as us.
+     *
+     * In all cases:
+     * the data is encrypted, and authenticated.
      * The sequential part of nonces is even if the sender's public key is lexicographically smaller than the receiver's public key, and uneven (odd, not divisible by 2) otherwise.
      * The constant part of nonces is supplied by the user.
      *
      * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
      *
+     * In case of public-key it optimizes operation:
      * Splits the box operation into crypto_box_beforenm and crypto_box_open_afternm for increased performance.
      * The beforenm parameter is locked into memory for the lifetime of the unboxer and securely erased at destroy time.
      */
     template <typename noncetype>
-    class unboxer {
+    class unboxer final : public boxer_base {
     private:
         noncetype n;
-        std::string k;
     public:
         /**
          * Construct from the sender's public key pk, the receiver's secret key sk and an encoded constant part for the nonces.
          */
-        unboxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : k(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, pk.get().to_binary() > sk.pk.get().to_binary()) {
+        unboxer(const box_public_key& pk, const box_secret_key& sk, const encoded_bytes& nonce_constant) : boxer_base(crypto_box_beforenm(pk.get().to_binary(), sk.get().to_binary())), n(nonce_constant, pk.get().to_binary() > sk.pk.get().to_binary()) {
+            mlock(k);
+        }
+        /**
+        * Construct from the secret shared-key, and possibly with using a nonce_constant.
+        */
+        unboxer(boxer_type_shared_key , bool use_nonce_even, const encoded_bytes& secret_shared_key,
+        	const encoded_bytes& nonce_constant = encoded_bytes() ) :
+        // TODO: make sure the k is mlock'ed before it is initialized with a value
+        	boxer_base(secret_shared_key.bytes), n(nonce_constant, use_nonce_even)
+        {
             mlock(k);
         }
         /**
