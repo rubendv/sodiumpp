@@ -465,7 +465,7 @@ namespace sodiumpp {
      *
      * The beforenm parameter is locked into memory for the lifetime of the boxer and securely erased at destroy time.
      *
-     * or instead: 
+     * or instead:
      * 2) (for constructors marked with first argument type boxer_type_shared_key) it does:
      * Boxes a series of messages between sender and receiver who both have same secret shared-key.
      * The sequential part of nonces is even if user sets option use_nonce_even. Otherwise it is odd.
@@ -473,13 +473,13 @@ namespace sodiumpp {
      * (If the higher protocol involves public keys then perhaps it can use same trick with lexicographical comparsion as 
      * described above)
      * You can define nonce_constant here too.
-     * 
+     *
      * In all cases:
      * the data is encrypted, and authenticated.
-     * 
+     *
      * The template parameter noncetype specifies the type of nonce that should be used by the boxer.
      *
-     * 
+     *
      */
     template <typename noncetype>
     class boxer final : public boxer_base {
