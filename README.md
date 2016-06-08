@@ -1,6 +1,8 @@
 sodiumpp
 ========
 
+[![Build Status](https://travis-ci.org/rubendv/sodiumpp.svg?branch=master)](https://travis-ci.org/rubendv/sodiumpp)
+
 *This is a very preliminary version, do NOT expect it to be secure or use it for anything important.*
 
 This library implements the C++ API of NaCl (which is described [here](http://nacl.cr.yp.to/)) with some small improvements on top of libsodium, as well as a high level API that takes care of nonce generation for you.
