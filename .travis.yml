@@ -8,6 +8,6 @@ before_install:
     - docker build -t rubendv/sodiumpp .
 
 script:
-    - docker run -it --rm -v $PWD:/opt/sodiumpp rubendv/sodiumpp /opt/sodiumpp/build.sh
+    - docker run -it --rm -v $PWD:/opt/sodiumpp rubendv/sodiumpp /opt/sodiumpp/travis/build.sh
     - docker run -it --rm -v $PWD:/opt/sodiumpp rubendv/sodiumpp /opt/sodiumpp/build/tests --reporter=spec
     - docker run -it --rm -v $PWD:/opt/sodiumpp rubendv/sodiumpp /opt/sodiumpp/build/example
