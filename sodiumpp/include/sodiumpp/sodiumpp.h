@@ -364,7 +364,7 @@ namespace sodiumpp {
          * Construct from encoded nonce.
          * Throws std::invalid_argument if the number of decoded bytes is not crypto_box_NONCEBYTES.
          */
-        nonce(const encoded_bytes& encoded) {
+        nonce(const encoded_bytes& encoded) : overflow(false) {
             std::string decoded = encoded.to_binary();
             if(decoded.size() != crypto_box_NONCEBYTES) {
                 throw std::invalid_argument("incorrect number of decoded bytes");
