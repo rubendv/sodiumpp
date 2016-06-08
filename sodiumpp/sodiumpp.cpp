@@ -296,7 +296,7 @@ std::string sodiumpp::crypto_stream_xor(const std::string &m,const std::string &
 
 std::string sodiumpp::bin2hex(const std::string& bytes) {
     std::string hex(bytes.size()*2, 0);
-    sodium_bin2hex(&hex[0], hex.size(), reinterpret_cast<const unsigned char *>(&bytes[0]), bytes.size());
+    sodium_bin2hex(&hex[0], hex.size()+1, reinterpret_cast<const unsigned char *>(&bytes[0]), bytes.size());
     return hex;
 }
 
