@@ -1,6 +1,10 @@
 cmake_minimum_required (VERSION 2.6)
 project (sodiumpp)
 
+if(APPLE)
+    set(CMAKE_MACOSX_RPATH ON)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
